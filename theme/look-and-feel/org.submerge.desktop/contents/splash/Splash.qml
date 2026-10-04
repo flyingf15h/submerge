@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 2.15
 
 // Boot screen in the same tank-monitor style as the wallpaper HUD.
 Rectangle {

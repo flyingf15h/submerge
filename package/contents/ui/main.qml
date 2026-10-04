@@ -1,23 +1,23 @@
-import QtQuick
-import org.kde.plasma.plasmoid
+import QtQuick 2.15
+import org.kde.plasma.core 2.0 as PlasmaCore
 
-WallpaperItem {
+Item {
     id: root
 
     Pond {
         anchors.fill: parent
-        fishCount: root.configuration.FishCount
-        fishSize: root.configuration.FishSize / 100
-        fishSpeed: root.configuration.FishSpeed / 100
-        lights: root.configuration.Lights
-        motes: root.configuration.Motes
-        ripples: root.configuration.Ripples
-        foreground: root.configuration.Foreground
-        filmLook: root.configuration.FilmLook
-        hud: root.configuration.Hud
-        title: root.configuration.Title
-        player: root.configuration.Player
-        textScale: root.configuration.TextScale / 100
+        fishCount: wallpaper.configuration.FishCount
+        fishSize: wallpaper.configuration.FishSize / 100
+        fishSpeed: wallpaper.configuration.FishSpeed / 100
+        lights: wallpaper.configuration.Lights
+        motes: wallpaper.configuration.Motes
+        ripples: wallpaper.configuration.Ripples
+        foreground: wallpaper.configuration.Foreground
+        filmLook: wallpaper.configuration.FilmLook
+        hud: wallpaper.configuration.Hud
+        title: wallpaper.configuration.Title
+        player: wallpaper.configuration.Player
+        textScale: wallpaper.configuration.TextScale / 100
         running: root.visible
     }
 }

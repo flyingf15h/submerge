@@ -1,6 +1,6 @@
-import QtQuick
-import QtQuick.Controls as QQC2
-import org.kde.kirigami as Kirigami
+import QtQuick 2.15
+import QtQuick.Controls 2.15 as QQC2
+import org.kde.kirigami 2.20 as Kirigami
 
 Kirigami.FormLayout {
     property alias cfg_FishCount: fishCount.value

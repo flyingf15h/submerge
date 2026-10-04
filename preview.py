@@ -5,29 +5,43 @@ Restarts the window whenever anything in package/ changes. A full restart (inste
 QML in place) is needed because Qt caches compiled shaders by path, so edited shaders would
 otherwise keep showing the old version.
 """
-import os, subprocess, sys, time
+import os, subprocess, sys, time, urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = os.path.join(HERE, "package")
 UI = os.path.join(PKG, "contents", "ui")
 
 
-def viewer():
-    from PyQt6.QtCore import QUrl
-    from PyQt6.QtGui import QGuiApplication
-    from PyQt6.QtQml import QQmlApplicationEngine
-    app = QGuiApplication(sys.argv)
-    engine = QQmlApplicationEngine()
-    engine.warnings.connect(lambda ws: [print("QML:", w.toString(), flush=True) for w in ws])
-    engine.loadData(b"""
-import QtQuick
+WRAPPER = b"""
+import QtQuick 2.15
+import QtQuick.Window 2.15
 Window {
     width: 1600; height: 900; visible: true; color: "black"
     title: "Submerge preview (restarts on save)"
     Loader { anchors.fill: parent; source: "Pond.qml" }
 }
-""", QUrl.fromLocalFile(os.path.join(UI, "preview-wrapper.qml")))
-    sys.exit(app.exec())
+"""
+
+
+def viewer():
+    try:
+        from PyQt5.QtCore import QUrl
+        from PyQt5.QtGui import QGuiApplication
+        from PyQt5.QtQml import QQmlApplicationEngine
+    except ImportError:
+        # no PyQt5 QML bindings: run the same wrapper with Qt 5's qmlscene instead. It goes in a
+        # temp file (outside package/, which is watched) pointing at Pond.qml by full URL.
+        import tempfile
+        pond = "file://" + urllib.parse.quote(os.path.join(UI, "Pond.qml"))
+        path = os.path.join(tempfile.gettempdir(), "submerge-preview.qml")
+        with open(path, "wb") as f:
+            f.write(WRAPPER.replace(b'"Pond.qml"', b'"' + pond.encode() + b'"'))
+        os.execvp("qmlscene", ["qmlscene", path])
+    app = QGuiApplication(sys.argv)
+    engine = QQmlApplicationEngine()
+    engine.warnings.connect(lambda ws: [print("QML:", w.toString(), flush=True) for w in ws])
+    engine.loadData(WRAPPER, QUrl.fromLocalFile(os.path.join(UI, "preview-wrapper.qml")))
+    sys.exit(app.exec_())
 
 
 def snapshot():

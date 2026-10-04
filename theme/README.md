@@ -1,6 +1,6 @@
 # Submerge
 
-A late-night koi pond for KDE Plasma 6, styled like a PS2-era game loading screen.
+A late-night koi pond for KDE Plasma 5, styled like a PS2-era game loading screen.
 
 ![screenshot](look-and-feel/org.submerge.desktop/contents/previews/fullscreenpreview.jpg)
 
@@ -20,11 +20,11 @@ A late-night koi pond for KDE Plasma 6, styled like a PS2-era game loading scree
 
 ## Install
 
-Needs KDE Plasma 6.
+Needs KDE Plasma 5.27.
 
 ```sh
-tar xzf submerge-1.0.tar.gz
-cd submerge-1.0
+tar xzf submerge-1.0-plasma5.tar.gz
+cd submerge-1.0-plasma5
 ./install.sh --apply
 ```
 

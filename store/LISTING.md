@@ -8,9 +8,9 @@ Archives are in `dist/store/` after running `./build-dist.sh`. Screenshots are i
 
 ## 1. Wallpaper
 
-- **Category:** Plasma 6 Add-Ons > Plasma 6 Wallpaper Plugins
+- **Category:** Plasma 5 Add-Ons > Plasma 5 Wallpaper Plugins
 - **Title:** Submerge
-- **File:** `dist/store/submerge-wallpaper-1.0.tar.gz`
+- **File:** `dist/store/submerge-wallpaper-1.0-plasma5.tar.gz`
 - **License:** GPLv3 (artwork CC BY-NC-SA 4.0, mention in the description)
 - **Tags:** koi, fish, aquarium, water, animated, live wallpaper, cyberpunk, hud, dark, blue
 - **Summary:** A late night koi pond with a sci-fi tank monitor HUD
@@ -31,7 +31,7 @@ What's in it:
 
 Everything can be turned off or tuned in the wallpaper settings: number of fish, size, speed, text size, title, user name, ripples, light, grain and the HUD.
 
-Needs Plasma 6. For the full look, also grab the Submerge global theme, Plasma style and colour scheme.
+Needs Plasma 5. For the full look, also grab the Submerge global theme, Plasma style and colour scheme.
 
 Fish artwork by MossyFish, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: https://github.com/flyingf15h/submerge
 
@@ -41,9 +41,9 @@ Fish artwork by MossyFish, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: http
 
 ## 2. Plasma style (panel and taskbar)
 
-- **Category:** Plasma 6 Add-Ons > Plasma Themes
+- **Category:** Plasma 5 Add-Ons > Plasma Themes
 - **Title:** Submerge
-- **File:** `dist/store/submerge-plasma-style-1.0.tar.gz`
+- **File:** `dist/store/submerge-plasma-style-1.0-plasma5.tar.gz`
 - **License:** GPLv3
 - **Tags:** dark, blue, navy, cyberpunk, hud, panel, taskbar
 - **Summary:** Navy glass panel with a glowing edge, made for the Submerge wallpaper
@@ -63,7 +63,7 @@ Made to go with the Submerge wallpaper, but it works fine on its own.
 
 ## 3. Colour scheme
 
-- **Category:** Plasma 6 Add-Ons > Plasma Color Schemes
+- **Category:** Plasma 5 Add-Ons > Plasma Color Schemes
 - **Title:** Submerge
 - **File:** `dist/store/Submerge.colors`
 - **License:** GPLv3
@@ -81,9 +81,9 @@ visited and things that need attention. Made for the Submerge wallpaper.
 
 ## 4. Global theme
 
-- **Category:** Plasma 6 Add-Ons > Global Themes (Plasma 6)
+- **Category:** Plasma 5 Add-Ons > Global Themes (Plasma 5)
 - **Title:** Submerge
-- **File:** `dist/store/submerge-global-theme-1.0.tar.gz`
+- **File:** `dist/store/submerge-global-theme-1.0-plasma5.tar.gz`
 - **License:** GPLv3
 - **Tags:** koi, fish, aquarium, dark, blue, cyberpunk, hud, animated
 - **Summary:** A late night koi pond desktop, styled like an old game loading screen

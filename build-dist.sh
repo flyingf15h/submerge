@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Builds dist/submerge-<version>.tar.gz: the wallpaper, Plasma style, colour scheme, global
+# Builds dist/submerge-<version>-plasma5.tar.gz: the wallpaper, Plasma style, colour scheme, global
 # theme (with splash) and fonts, plus install/uninstall scripts for whoever downloads it.
 set -euo pipefail
 cd "$(dirname "$0")"
 VERSION=1.0
-OUT=dist/submerge-$VERSION
+NAME=submerge-$VERSION-plasma5
+OUT=dist/$NAME
 rm -rf "$OUT" && mkdir -p "$OUT"/{wallpaper,desktoptheme,look-and-feel,color-schemes,fonts}
 
-./install.sh --compile-only
+./install.sh --shaders-only
 cp -r package "$OUT/wallpaper/org.submerge.wallpaper"
 python3 plasma-style/build.py "$OUT/desktoptheme/submerge" >/dev/null
 cp -r theme/look-and-feel/org.submerge.desktop "$OUT/look-and-feel/"
@@ -28,7 +29,7 @@ PY
 
 cat > "$OUT/install.sh" <<'SH'
 #!/usr/bin/env bash
-# Installs Submerge for the current user. Run with --apply to switch to it straight away.
+# Installs Submerge (Plasma 5) for the current user. Run with --apply to switch to it straight away.
 set -euo pipefail
 cd "$(dirname "$0")"
 D="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -63,12 +64,12 @@ SH
 chmod +x "$OUT/install.sh" "$OUT/uninstall.sh"
 cp theme/README.md "$OUT/README.md"
 cp LICENSE ART-LICENSE.md "$OUT/"
-tar -C dist -czf "dist/submerge-$VERSION.tar.gz" "submerge-$VERSION"
+tar -C dist -czf "dist/$NAME.tar.gz" "$NAME"
 
 # separate archives for the KDE Store, one per item
 mkdir -p dist/store
-tar -C "$OUT/wallpaper" -czf "dist/store/submerge-wallpaper-$VERSION.tar.gz" org.submerge.wallpaper
-tar -C "$OUT/desktoptheme" -czf "dist/store/submerge-plasma-style-$VERSION.tar.gz" submerge
-tar -C "$OUT/look-and-feel" -czf "dist/store/submerge-global-theme-$VERSION.tar.gz" org.submerge.desktop
+tar -C "$OUT/wallpaper" -czf "dist/store/submerge-wallpaper-$VERSION-plasma5.tar.gz" org.submerge.wallpaper
+tar -C "$OUT/desktoptheme" -czf "dist/store/submerge-plasma-style-$VERSION-plasma5.tar.gz" submerge
+tar -C "$OUT/look-and-feel" -czf "dist/store/submerge-global-theme-$VERSION-plasma5.tar.gz" org.submerge.desktop
 cp "$OUT/color-schemes/Submerge.colors" dist/store/
-echo "built dist/submerge-$VERSION.tar.gz ($(du -h "dist/submerge-$VERSION.tar.gz" | cut -f1))"
+echo "built dist/$NAME.tar.gz ($(du -h "dist/$NAME.tar.gz" | cut -f1))"

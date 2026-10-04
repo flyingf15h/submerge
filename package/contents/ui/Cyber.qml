@@ -1,5 +1,4 @@
-import QtQuick
-import QtQuick.Effects
+import QtQuick 2.15
 
 // Tank-monitoring overlay: one specimen box that locks onto a fish (the one nearest the cursor
 // when the cursor is on the desktop, otherwise a random one every so often), a depth ruler
@@ -22,13 +21,10 @@ Item {
     readonly property string mono: "IBM Plex Mono"
 
     layer.enabled: true
-    layer.effect: MultiEffect {
-        shadowEnabled: true
+    layer.effect: ShadowFx {
         shadowColor: "#3f73ff"
         shadowBlur: 0.7
         shadowOpacity: 0.95
-        shadowHorizontalOffset: 0
-        shadowVerticalOffset: 0
     }
 
     component Mono: Text {
@@ -49,7 +45,7 @@ Item {
         }
         const m = fgItems ? fgItems.count : 0;
         for (let j = 0; j < m; j++) {
-            const f = fgItems.itemAt(j)?.fish;
+            const f = (fgItems.itemAt(j) || {}).fish;
             if (f) out.push({ fish: f, id: 0, blur: true });
         }
         return out;
@@ -59,6 +55,18 @@ Item {
     }
     function onScreen(p, margin) {
         return p[0] > width * margin && p[0] < width * (1 - margin) && p[1] > height * margin && p[1] < height * (1 - margin);
+    }
+
+    function reading(k) {
+        const c = cond;
+        switch (k) {
+        case "TEMP": return { v: c ? (c.temp + 0.1 * Math.sin(t * 0.05)).toFixed(1) + " °C" : "--", f: c ? (c.temp - 18) / 10 : 0 };
+        case "PH":   return { v: c ? (c.ph + 0.02 * Math.sin(t * 0.03 + 1)).toFixed(2) : "--", f: c ? (c.ph - 6.2) / 2 : 0 };
+        case "O₂":   return { v: c ? Math.round(c.o2) + " %" : "--", f: c ? (c.o2 - 80) / 20 : 0 };
+        case "FLOW": return { v: c ? (c.flow + 0.01 * Math.sin(t * 0.11)).toFixed(2) + " L/s" : "--", f: c ? c.flow / 0.7 : 0 };
+        case "SPECIMENS": return { v: String((fishItems ? fishItems.count : 0) + (fgItems ? fgItems.count : 0)), f: 1 };
+        default: return { v: c ? c.dominant : "--", f: 1 };
+        }
     }
 
     // scrambled text for the blurry fish the scanner can't read properly
@@ -181,7 +189,7 @@ Item {
         }
     }
 
-    FrameAnimation {
+    FrameTicker {
         running: cyber.visible
         onTriggered: box.step(Math.min(frameTime, 0.05))
     }
@@ -228,27 +236,22 @@ Item {
         Mono { text: "// TANK 03  —  BOOT " + (cyber.cond ? (cyber.cond.seed % 65536).toString(16).toUpperCase().padStart(4, "0") : "----"); font.pixelSize: 10 * cyber.u; opacity: 0.92 }
         Rectangle { width: 210 * cyber.u; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.45 }
         Repeater {
-            model: [
-                { k: "TEMP", v: () => cyber.cond ? (cyber.cond.temp + 0.1 * Math.sin(cyber.t * 0.05)).toFixed(1) + " °C" : "--", f: () => cyber.cond ? (cyber.cond.temp - 18) / 10 : 0 },
-                { k: "PH", v: () => cyber.cond ? (cyber.cond.ph + 0.02 * Math.sin(cyber.t * 0.03 + 1)).toFixed(2) : "--", f: () => cyber.cond ? (cyber.cond.ph - 6.2) / 2 : 0 },
-                { k: "O₂", v: () => cyber.cond ? Math.round(cyber.cond.o2) + " %" : "--", f: () => cyber.cond ? (cyber.cond.o2 - 80) / 20 : 0 },
-                { k: "FLOW", v: () => cyber.cond ? (cyber.cond.flow + 0.01 * Math.sin(cyber.t * 0.11)).toFixed(2) + " L/s" : "--", f: () => cyber.cond ? cyber.cond.flow / 0.7 : 0 },
-                { k: "SPECIMENS", v: () => String((cyber.fishItems ? cyber.fishItems.count : 0) + (cyber.fgItems ? cyber.fgItems.count : 0)), f: () => 1 },
-                { k: "THRIVING", v: () => cyber.cond ? cyber.cond.dominant : "--", f: () => 1 }
-            ]
+            // Qt 5 drops functions from array models, so each row looks its values up by name
+            model: ["TEMP", "PH", "O₂", "FLOW", "SPECIMENS", "THRIVING"]
             Item {
                 required property var modelData
+                readonly property var r: { cyber.t; cyber.cond; return cyber.reading(modelData); }
                 width: 210 * cyber.u
                 height: 16 * cyber.u
-                Mono { text: modelData.k; opacity: 0.92 }
-                Mono { anchors.right: parent.right; text: { cyber.t; cyber.cond; return modelData.v(); } }
+                Mono { text: parent.modelData; opacity: 0.92 }
+                Mono { anchors.right: parent.right; text: parent.r.v }
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.18
                 }
                 Rectangle {
                     anchors.bottom: parent.bottom
-                    width: parent.width * Math.max(0, Math.min(1, modelData.f())); height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.6
+                    width: parent.width * Math.max(0, Math.min(1, parent.r.f)); height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.6
                 }
             }
         }

@@ -1,7 +1,6 @@
-import QtQuick
-import QtQuick.Effects
-import org.kde.ksysguard.sensors as Sensors
-import org.kde.plasma.plasma5support as P5Support
+import QtQuick 2.15
+import org.kde.ksysguard.sensors 1.0 as Sensors
+import org.kde.plasma.core 2.0 as PlasmaCore
 
 // Desktop HUD in the style of a game loading screen: title, a big clock, live system readouts
 // in place of a menu, and status lines in the corners.
@@ -45,11 +44,12 @@ Item {
     property string topMem: ""
     readonly property string cpuCmd: "top -b -n2 -d0.5 -w 200 | awk '/^top -/{n++} n==2 && $1 ~ /^[0-9]+$/ {a[$12]+=$9} END{for(k in a) printf \"%.1f %s\\n\", a[k], k}' | sort -rn | head -1"
     readonly property string memCmd: "ps -eo comm,rss --no-headers | awk '{a[$1]+=$2} END{for(k in a) print a[k], k}' | sort -rn | head -1"
-    P5Support.DataSource {
+    PlasmaCore.DataSource {
         engine: "executable"
         connectedSources: hud.visible ? [hud.cpuCmd, hud.memCmd] : []
         interval: 4000
-        onNewData: (source, data) => {
+        onNewData: {
+            const source = sourceName;
             const name = (data.stdout || "").trim().split(/\s+/).slice(1).join(" ").toUpperCase().slice(0, 16);
             if (source === hud.cpuCmd) hud.topCpu = name;
             else hud.topMem = name;
@@ -65,6 +65,15 @@ Item {
         const s = Math.floor(seconds || 0);
         const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
         return (d ? d + "D " : "") + String(h).padStart(2, "0") + "H " + String(m).padStart(2, "0") + "M";
+    }
+    function readout(en) {
+        switch (en) {
+        case "CPU":     return { sub: hud.topCpu ? "TOP: " + hud.topCpu : "TOTAL LOAD", v: Math.round(pct(cpu.value)) + "%", f: pct(cpu.value) / 100 };
+        case "GPU":     return { sub: "RENDER LOAD", v: Math.round(pct(gpu.value)) + "%", f: pct(gpu.value) / 100 };
+        case "MEMORY":  return { sub: hud.topMem ? "TOP: " + hud.topMem : "PHYSICAL RAM", v: Math.round(pct(mem.value)) + "%", f: pct(mem.value) / 100 };
+        case "NETWORK": return { sub: "DOWNLINK", v: "↓ " + rate(down.value), f: Math.min(1, (down.value || 0) / 5242880) };
+        default:        return { sub: "DISK USED", v: Math.round(pct(disk.value)) + "%", f: pct(disk.value) / 100 };
+        }
     }
     readonly property bool busy: pct(cpu.value) > 85 || pct(mem.value) > 90
 
@@ -87,13 +96,10 @@ Item {
 
     // a dark halo behind the thin text so it reads on bright water, then a blue bloom on top
     layer.enabled: true
-    layer.effect: MultiEffect {
-        shadowEnabled: true
+    layer.effect: ShadowFx {
         shadowColor: "#3f73ff"
         shadowBlur: 0.85
         shadowOpacity: 1.0
-        shadowHorizontalOffset: 0
-        shadowVerticalOffset: 0
         brightness: 0.08
     }
 
@@ -164,12 +170,13 @@ Item {
 
         // live readouts, laid out like the menu in the video
         Repeater {
+            // Qt 5 drops functions from array models, so each row looks its values up by name
             model: [
-                { n: "01", en: "CPU",     sub: () => hud.topCpu ? "TOP: " + hud.topCpu : "TOTAL LOAD",  v: () => Math.round(hud.pct(cpu.value)) + "%",  f: () => hud.pct(cpu.value) / 100 },
-                { n: "02", en: "GPU",     sub: "RENDER LOAD", v: () => Math.round(hud.pct(gpu.value)) + "%",  f: () => hud.pct(gpu.value) / 100 },
-                { n: "03", en: "MEMORY",  sub: () => hud.topMem ? "TOP: " + hud.topMem : "PHYSICAL RAM",      v: () => Math.round(hud.pct(mem.value)) + "%",  f: () => hud.pct(mem.value) / 100 },
-                { n: "04", en: "NETWORK", sub: "DOWNLINK",  v: () => "↓ " + hud.rate(down.value),         f: () => Math.min(1, (down.value || 0) / 5242880) },
-                { n: "05", en: "STORAGE", sub: "DISK USED",   v: () => Math.round(hud.pct(disk.value)) + "%", f: () => hud.pct(disk.value) / 100 }
+                { n: "01", en: "CPU" },
+                { n: "02", en: "GPU" },
+                { n: "03", en: "MEMORY" },
+                { n: "04", en: "NETWORK" },
+                { n: "05", en: "STORAGE" }
             ]
             Item {
                 id: row
@@ -177,7 +184,7 @@ Item {
                 required property int index
                 width: 360 * hud.u
                 height: 58 * hud.u
-                readonly property real level: { cpu.value; gpu.value; mem.value; down.value; disk.value; return modelData.f(); }
+                readonly property real level: { cpu.value; gpu.value; mem.value; down.value; disk.value; return hud.readout(modelData.en).f; }
                 readonly property bool high: level > 0.85
                 // the highlight drifts down the list slowly, like an idle menu cursor
                 readonly property bool lit: Math.floor(hud.t / 6) % 5 === index
@@ -208,14 +215,14 @@ Item {
                     anchors.verticalCenterOffset: -3 * hud.u
                     spacing: 3 * hud.u
                     Mono { text: row.modelData.en; font.pixelSize: 15 * hud.u; font.letterSpacing: 3.5 * hud.u }
-                    Mono { text: { hud.topCpu; hud.topMem; const s = row.modelData.sub; return typeof s === "function" ? s() : s; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
+                    Mono { text: { hud.topCpu; hud.topMem; return hud.readout(row.modelData.en).sub; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
                 }
                 Mono {
                     anchors.right: parent.right
                     anchors.rightMargin: 8 * hud.u
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: -3 * hud.u
-                    text: { cpu.value; gpu.value; mem.value; down.value; disk.value; return row.modelData.v(); }
+                    text: { cpu.value; gpu.value; mem.value; down.value; disk.value; return hud.readout(row.modelData.en).v; }
                     color: row.high ? hud.hot : hud.ink
                     font.pixelSize: 14 * hud.u
                 }
