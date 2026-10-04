@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <entry name="FishCount" type="Int"><default>9</default></entry>
+    <entry name="FishSize" type="Int"><default>100</default></entry>
+    <entry name="FishSpeed" type="Int"><default>100</default></entry>
+    <entry name="Lights" type="Bool"><default>true</default></entry>
+    <entry name="Motes" type="Bool"><default>true</default></entry>
+    <entry name="Ripples" type="Bool"><default>true</default></entry>
+    <entry name="Foreground" type="Bool"><default>true</default></entry>
+    <entry name="FilmLook" type="Bool"><default>true</default></entry>
+    <entry name="Hud" type="Bool"><default>true</default></entry>
+    <entry name="Title" type="String"><default>SUBMERGE</default></entry>
+    <entry name="Player" type="String"><default>GUEST</default></entry>
+    <entry name="TextScale" type="Int"><default>100</default></entry>
+  </group>
+</kcfg>

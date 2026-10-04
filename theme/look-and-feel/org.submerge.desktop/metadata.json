@@ -1,0 +1,18 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "flyingf15h"
+            }
+        ],
+        "Category": "",
+        "Description": "Late-night koi pond with a sci-fi tank-monitor HUD: live wallpaper, panel style, colours and splash",
+        "Id": "org.submerge.desktop",
+        "License": "GPL-3.0-or-later",
+        "Name": "Submerge",
+        "Version": "1.0",
+        "Website": "https://github.com/flyingf15h/submerge"
+    },
+    "X-Plasma-APIVersion": "2"
+}

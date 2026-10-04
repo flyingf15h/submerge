@@ -1,0 +1,17 @@
+{
+    "KPackageStructure": "Plasma/Wallpaper",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "flyingf15h"
+            }
+        ],
+        "Description": "A late-night koi pond with a sci-fi tank-monitor HUD. Fish art by MossyFish.",
+        "Icon": "preferences-desktop-wallpaper",
+        "Id": "org.submerge.wallpaper",
+        "License": "GPL-3.0-or-later",
+        "Name": "Submerge",
+        "Version": "1.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
