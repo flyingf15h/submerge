@@ -33,7 +33,7 @@ Everything can be turned off or tuned in the wallpaper settings: number of fish,
 
 Needs Plasma 6. For the full look, also grab the Submerge global theme, Plasma style and colour scheme.
 
-Fish artwork by MossyFish, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: https://github.com/flyingf15h/submerge
+Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: https://github.com/flyingf15h/submerge
 
 **Changelog (1.0):** First release.
 
@@ -103,6 +103,6 @@ Tick "Desktop and window layout" when applying it if you want the wallpaper swit
 
 All-in-one download with an install script: https://github.com/flyingf15h/submerge/releases
 
-Fish artwork by MossyFish, licensed CC BY-NC-SA 4.0. Code is GPLv3.
+Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3.
 
 **Changelog (1.0):** First release.

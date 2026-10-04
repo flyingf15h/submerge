@@ -40,6 +40,6 @@ Global Theme. `./uninstall.sh` removes it. Needs Plasma 6.
 
 ## License
 
-Code is GPL-3.0-or-later (`LICENSE`). The fish, water and caustic artwork is by MossyFish,
+Code is GPL-3.0-or-later (`LICENSE`). The fish, water and caustic artwork is by flyingf15h,
 from [Still Waters](https://github.com/MossyFish/Still-Waters), and is CC BY-NC-SA 4.0
 (`ART-LICENSE.md`). The bundled IBM Plex fonts are under the SIL Open Font License.

@@ -44,5 +44,5 @@ the number of fish, size, speed, title, user name, and turn off any of the effec
 
 ## Credits
 
-Fish, water and caustic artwork by MossyFish, from
+Fish, water and caustic artwork by flyingf15h, from
 [Still Waters](https://github.com/MossyFish/Still-Waters).
