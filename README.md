@@ -1,31 +1,29 @@
 # Submerge
 
-A deep ocean koi fish theme for KDE Plasma 5 and 6.
+A deep ocean koi fish theme for KDE Plasma 5 and 6. The wallpaper is animated and has a HUD
+for the clock and system stats, and it comes with a matching panel style, colour scheme and
+splash screen.
 
 ![Submerge](store/screenshots/submerge-1.jpg)
 
-Demo videos: [the wallpaper](store/demo/submerge-wallpaper.mp4) (the specimen box following the
-cursor) and [the global theme](store/demo/submerge-global-theme.mp4) (panel, launcher, colour
-scheme and splash screen).
+Videos: [the wallpaper](store/demo/submerge-wallpaper.mp4) and [the whole theme](store/demo/submerge-global-theme.mp4).
 
-- **Live wallpaper**: koi that swim in bursts and glides and bend into their turns, real
-  ripples from a small water simulation, caustic light along the top, and two or three big
-  blurry glitching koi drifting past the glass.
-- **HUD**: big clock, live CPU / GPU / memory / network / storage readouts (with the app using
-  the most CPU and memory), and a system status line.
-- **Tank monitor**: one specimen box that locks onto the fish nearest your cursor, a depth
-  ruler, and tank conditions that are rerolled every boot. Warm water brings out the orange
-  varieties, acidic water the teal ones, alkaline water the violet ones, low oxygen more juveniles.
-- **Plasma style** for the panel and task manager, a **colour scheme**, and a **splash screen**.
+## What's in it
+
+- Koi that swim in short bursts and glides. The ripples come from a small water sim, so drips
+  and fish coming up to the surface leave rings.
+- A HUD with the time, CPU, GPU, memory, network, disk and battery (with time left), plus
+  which app is using the most CPU and memory.
+- Hover over a fish to put the specimen box on it. It shows the variety, heading and depth.
+- Tank temperature, pH and oxygen get rerolled every boot and change which koi show up.
+- It's easy on battery. It runs at 20 fps, drops to 10 while you're in a window, stops when a
+  maximized window covers it, and holds still on battery while you're using a window.
 
 ## Install
 
 From the KDE Store: [global theme](https://store.kde.org/p/2377260/),
 [wallpaper](https://store.kde.org/p/2377252/), [panel style](https://store.kde.org/p/2377258/),
-[colour scheme](https://store.kde.org/p/2377259/). Or the all-in-one download:
-
-
-Grab `submerge-1.6.tar.gz` from [Releases](../../releases), then:
+[colour scheme](https://store.kde.org/p/2377259/). Or grab `submerge-1.6.tar.gz` from [Releases](../../releases), then:
 
 ```sh
 tar xzf submerge-1.6.tar.gz
