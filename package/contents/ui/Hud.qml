@@ -16,7 +16,9 @@ Item {
     property real textScale: 1
     // while the pond is paused, the clock and readouts only refresh once a minute
     property bool paused: false
-    readonly property int slow: paused ? 60000 : 1
+    // at the lower frame rate the readouts don't need to be as fresh either
+    property bool lowPower: false
+    readonly property int slow: paused ? 60000 : lowPower ? 5000 : 1
 
     readonly property real u: height / 1080 * textScale
     readonly property color ink: "#eef4ff"
@@ -90,7 +92,8 @@ Item {
     P5Support.DataSource {
         engine: "executable"
         connectedSources: hud.visible && !hud.paused ? [hud.cpuCmd, hud.memCmd] : []
-        interval: 4000
+        // top and ps walk every process, so don't run them often
+        interval: hud.lowPower ? 30000 : 10000
         onNewData: (source, data) => {
             const name = (data.stdout || "").trim().split(/\s+/).slice(1).join(" ").toUpperCase().slice(0, 16);
             if (source === hud.cpuCmd) hud.topCpu = name;
@@ -230,9 +233,12 @@ Item {
                 // eased by step() on the pond's frames; set straight away while paused
                 property real shownLevel: level
                 property real shownLit: lit ? 0.4 : 0
+                // snap once close, or the easing never quite finishes and the HUD's glow layer
+                // gets redrawn on every frame for nothing
                 function step(dt) {
-                    shownLevel += (level - shownLevel) * (1 - Math.exp(-dt / 0.25));
-                    shownLit += ((lit ? 0.4 : 0) - shownLit) * (1 - Math.exp(-dt / 0.2));
+                    const lv = level - shownLevel, li = (lit ? 0.4 : 0) - shownLit;
+                    if (lv !== 0) shownLevel = Math.abs(lv) < 0.002 ? level : shownLevel + lv * (1 - Math.exp(-dt / 0.25));
+                    if (li !== 0) shownLit = Math.abs(li) < 0.004 ? (lit ? 0.4 : 0) : shownLit + li * (1 - Math.exp(-dt / 0.2));
                 }
                 onLevelChanged: if (hud.paused) shownLevel = level
                 onLitChanged: if (hud.paused) shownLit = lit ? 0.4 : 0

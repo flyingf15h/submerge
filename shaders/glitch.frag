@@ -25,11 +25,14 @@ void main() {
 
     // a constant slight split that widens during a burst
     float split = (0.0018 + 0.004 * burst + 0.0006 * sin(time * 1.3 + seed)) * strength;
+    // this runs over the whole screen for each blurry fish, so read each sample once and skip
+    // the rest where the fish isn't
     vec4 g = texture(source, uv);
-    float r = texture(source, uv + vec2(split, 0.0)).r;
-    float b = texture(source, uv - vec2(split, 0.0)).b;
-    float a = max(g.a, max(texture(source, uv + vec2(split, 0.0)).a, texture(source, uv - vec2(split, 0.0)).a));
-    vec3 col = vec3(r, g.g, b);
+    vec4 rs = texture(source, uv + vec2(split, 0.0));
+    vec4 bs = texture(source, uv - vec2(split, 0.0));
+    float a = max(g.a, max(rs.a, bs.a));
+    if (a < 0.002) { fragColor = vec4(0.0); return; }
+    vec3 col = vec3(rs.r, g.g, bs.b);
     col *= 0.94 + 0.06 * sin(uv.y * 900.0 + time * 6.0);   // scanlines
     col += vec3(0.0, 0.05, 0.12) * a * burst;                // cold flash while glitching
     fragColor = vec4(col, a) * qt_Opacity;

@@ -130,11 +130,12 @@ Item {
             size += (f.len * (target.blur ? 0.9 : 1.25) - size) * k;
             const hdg = "HDG " + String(Math.round(((f.angle * 180 / Math.PI) % 360 + 360) % 360)).padStart(3, "0") + "°";
             const dep = "DEPTH " + (0.3 + f.depth * 1.2).toFixed(2) + "m";
-            if (!target.blur) { hdgText = hdg; depthText = dep; }
-            else if (Math.floor(cyber.t * 6) !== tick) {   // re-scramble a few times a second
+            // the readout sits on a glow layer that redraws whenever the text changes, so only
+            // refresh it a few times a second (and re-scramble the blurry fish's at the same rate)
+            if (Math.floor(cyber.t * 6) !== tick) {
                 tick = Math.floor(cyber.t * 6);
-                hdgText = cyber.scramble(hdg);
-                depthText = cyber.scramble(dep);
+                hdgText = target.blur ? cyber.scramble(hdg) : hdg;
+                depthText = target.blur ? cyber.scramble(dep) : dep;
             }
         }
 

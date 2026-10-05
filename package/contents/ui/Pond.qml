@@ -66,7 +66,6 @@ Item {
     property real t: 0
     property real mouseX: -9999
     property real mouseY: -9999
-    property real mouseSpeed: 0
 
     // head anchor of the straight pose (frame 3) and body length, from the original render-koi.js.
     // Fish5 has no shadow art, so both baby fish use the Fish6 shadow with the type 5 anchors.
@@ -219,7 +218,6 @@ Item {
             hudLayer.step(dt);
             if (pond.ripples) pond.stepSim();
             pond.t += dt;
-            pond.mouseSpeed *= Math.pow(0.02, dt);
             for (let i = 0; i < fishRep.count; i++) fishRep.itemAt(i)?.step(dt);
             // small fish give each other room so the pond never looks crowded in one spot
             for (let i = 0; i < fishRep.count; i++) {
@@ -682,6 +680,7 @@ Item {
             player: pond.player
             textScale: pond.textScale
             paused: !pond.active
+            lowPower: pond.lowPower
             t: pond.t
             mouseX: pond.mouseX
             mouseY: pond.mouseY
@@ -746,22 +745,30 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
+    // The desktop's icon view sits on top of the wallpaper and takes the hover events, so a
+    // MouseArea in here never sees the cursor. A non-blocking HoverHandler on the window's root
+    // item still gets them, whatever is in between.
+    HoverHandler {
+        id: cursor
+        blocking: false
         property real lx: 0
         property real ly: 0
         property real lt: 0
-        onPositionChanged: (e) => {
-            const now = Date.now();
-            const dt = Math.max(1, now - lt) / 1000;
-            const v = Math.sqrt((e.x - lx) ** 2 + (e.y - ly) ** 2) / dt;
-            if (now - lt < 200) pond.mouseSpeed = Math.max(pond.mouseSpeed, v);
-            if (v > 700 && now - lt < 200 && Math.random() < 0.12) pond.drop(e.x, e.y, 0.008, 0.07);
-            lx = e.x; ly = e.y; lt = now;
-            pond.mouseX = e.x; pond.mouseY = e.y;
+        Component.onCompleted: {
+            let top = pond;
+            while (top.parent) top = top.parent;
+            parent = top;
         }
-        onExited: { pond.mouseX = -9999; pond.mouseY = -9999; }
+        onPointChanged: {
+            if (!pond.active) return;
+            const p = pond.mapFromItem(null, point.scenePosition.x, point.scenePosition.y);
+            if (p.x < 0 || p.y < 0 || p.x > pond.width || p.y > pond.height) { pond.mouseX = pond.mouseY = -9999; return; }
+            const now = Date.now();
+            const v = Math.sqrt((p.x - lx) ** 2 + (p.y - ly) ** 2) / (Math.max(1, now - lt) / 1000);
+            if (v > 700 && now - lt < 200 && Math.random() < 0.12) pond.drop(p.x, p.y, 0.008, 0.07);
+            lx = p.x; ly = p.y; lt = now;
+            pond.mouseX = p.x; pond.mouseY = p.y;
+        }
+        onHoveredChanged: if (!hovered) { pond.mouseX = -9999; pond.mouseY = -9999; }
     }
 }
