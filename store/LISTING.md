@@ -34,6 +34,8 @@ screen too.
 Needs Plasma 6. Art by flyingf15h (CC BY-NC-SA 4.0), code GPLv3.
 Source: https://github.com/flyingf15h/submerge
 
+**Changelog (1.4):** On battery it holds a still frame while you're using a window, so it costs no extra power.
+
 **Changelog (1.3):** Ripples keep their speed at low frame rates, battery row in the HUD, lock and
 sign-in screen support.
 
