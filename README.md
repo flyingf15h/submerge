@@ -16,6 +16,11 @@ A late night koi pond for KDE Plasma 6, styled like an old game loading screen.
 
 ## Install
 
+From the KDE Store: [global theme](https://store.kde.org/p/2377260/),
+[wallpaper](https://store.kde.org/p/2377252/), [panel style](https://store.kde.org/p/2377258/),
+[colour scheme](https://store.kde.org/p/2377259/). Or the all-in-one download:
+
+
 Grab `submerge-1.5.tar.gz` from [Releases](../../releases), then:
 
 ```sh

@@ -1,5 +1,14 @@
 # KDE Store listing for Submerge
 
+Published 2026-10-05 under flyingf15h:
+- Wallpaper: https://store.kde.org/p/2377252/
+- Plasma style: https://store.kde.org/p/2377258/
+- Colour scheme: https://store.kde.org/p/2377259/
+- Global theme: https://store.kde.org/p/2377260/
+
+To ship an update, edit each product (Products > Edit), bump the version, upload the new file on
+the Files step and add a changelog entry.
+
 Four items at https://store.kde.org (log in, then "Add Product"). Upload the global theme last so
 it can link to the other three. Files are in `dist/store/` after `./build-dist.sh`, screenshots in
 `store/screenshots/`.
@@ -27,8 +36,8 @@ over a fish and a specimen box locks onto it.
 The tank's temperature, pH and oxygen change every time you boot, and they decide which koi
 varieties show up most.
 
-It runs at 20 fps, drops to 10 while you're in a window or on battery, and stops when a maximized
-window covers it. Every effect can be turned off in the wallpaper settings. Works on the lock
+It runs at 20 fps, drops to 10 while you're in a window, stops when a maximized window covers
+it, and holds a still frame on battery so it never costs extra power. Every effect can be turned off in the wallpaper settings. Works on the lock
 screen too.
 
 Needs Plasma 6. Art by flyingf15h (CC BY-NC-SA 4.0), code GPLv3.
@@ -94,9 +103,9 @@ Sets up the whole Submerge look at once: the koi pond wallpaper, the glass panel
 scheme and a matching splash screen.
 
 Install these first, or applying the theme won't find them:
-- Wallpaper: (paste link)
-- Plasma style: (paste link)
-- Colour scheme: (paste link)
+- Wallpaper: https://store.kde.org/p/2377252/
+- Plasma style: https://store.kde.org/p/2377258/
+- Colour scheme: https://store.kde.org/p/2377259/
 
 Or download submerge-1.5.tar.gz from this page and run ./install.sh --apply, which installs
 everything in one go. The download also has an optional sign-in screen.
