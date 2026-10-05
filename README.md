@@ -1,6 +1,6 @@
 # Submerge
 
-A late night koi pond for KDE Plasma 6, styled like an old game loading screen.
+A deep ocean koi fish theme for KDE Plasma 5 and 6.
 
 ![Submerge](store/screenshots/submerge-1.jpg)
 
