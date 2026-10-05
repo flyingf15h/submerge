@@ -8,6 +8,7 @@ uniform float qt_Opacity;
 uniform float time;
 uniform float aspect;
 uniform float strength;
+uniform float span;      // fraction of the screen height this item covers, from the top
 
 float caustic(vec2 p, float t) {
     vec2 q = mod(p * 6.2831, 6.2831) - 250.0;
@@ -24,7 +25,7 @@ float caustic(vec2 p, float t) {
 }
 
 void main() {
-    vec2 uv = qt_TexCoord0;
+    vec2 uv = vec2(qt_TexCoord0.x, qt_TexCoord0.y * span);
     vec2 p = vec2(uv.x * aspect, uv.y);
     // stretch the pattern sideways near the top, like looking toward the lit end of the tank
     vec2 q = vec2(p.x * (0.55 + uv.y * 0.6), p.y * 1.3);

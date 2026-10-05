@@ -63,6 +63,7 @@ echo "Submerge removed."
 SH
 chmod +x "$OUT/install.sh" "$OUT/uninstall.sh"
 cp theme/README.md "$OUT/README.md"
+cp -r sddm "$OUT/sddm"
 cp LICENSE ART-LICENSE.md "$OUT/"
 tar -C dist -czf "dist/$NAME.tar.gz" "$NAME"
 

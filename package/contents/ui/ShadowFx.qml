@@ -1,8 +1,9 @@
 import QtQuick 2.15
-import QtGraphicalEffects 1.15
 
 // Stand-in for a Qt 6 MultiEffect used as a layer effect with only a centred shadow (and
 // optionally brightness): a blurred, tinted copy of the alpha drawn under the source.
+// The shadow is blurred at quarter resolution (see SoftBlur.qml); only the final composite
+// runs at full size.
 Item {
     id: fx
     property variant source
@@ -14,29 +15,42 @@ Item {
     property real brightness: 0
 
     // MultiEffect's blur spreads further than GaussianBlur's default deviation (radius / 3.3),
-    // so use a deviation of half the blur size and a kernel wide enough to hold it
+    // so use a deviation of half the blur size
     readonly property real spread: shadowBlur * blurMax
-    readonly property int radius: Math.round(spread * 1.5)
+    readonly property int downscale: 4
 
-    GaussianBlur {
-        id: blur
-        anchors.fill: parent
-        source: fx.source
-        radius: fx.radius
-        samples: fx.radius * 2 + 1
-        deviation: fx.spread / 2
+    // 4x4 box average of the alpha in four bilinear taps
+    ShaderEffect {
+        id: down
+        width: Math.max(1, Math.ceil(fx.width / fx.downscale))
+        height: Math.max(1, Math.ceil(fx.height / fx.downscale))
         visible: false
+        property variant source: fx.source
+        property vector2d px: Qt.vector2d(1 / Math.max(1, fx.width), 1 / Math.max(1, fx.height))
+        fragmentShader: "
+            varying highp vec2 qt_TexCoord0;
+            uniform sampler2D source;
+            uniform highp vec2 px;
+            uniform lowp float qt_Opacity;
+            void main() {
+                lowp float a = texture2D(source, qt_TexCoord0 + vec2(-px.x, -px.y)).a
+                             + texture2D(source, qt_TexCoord0 + vec2( px.x, -px.y)).a
+                             + texture2D(source, qt_TexCoord0 + vec2(-px.x,  px.y)).a
+                             + texture2D(source, qt_TexCoord0 + vec2( px.x,  px.y)).a;
+                gl_FragColor = vec4(0.0, 0.0, 0.0, a * 0.25);
+            }"
     }
-    ShaderEffectSource {
-        id: blurTex
-        sourceItem: blur
-        hideSource: true
-        visible: false
+    ShaderEffectSource { id: downTex; sourceItem: down; hideSource: true; visible: false; smooth: true }
+    SoftBlur {
+        id: blur
+        width: down.width; height: down.height
+        source: downTex
+        deviation: Math.max(0.5, fx.spread / 2 / fx.downscale)
     }
     ShaderEffect {
         anchors.fill: parent
         property variant source: fx.source
-        property variant shadow: blurTex
+        property variant shadow: blur.output
         property color shadowColor: fx.shadowColor
         property real shadowOpacity: fx.shadowOpacity
         property real shadowScale: fx.shadowScale

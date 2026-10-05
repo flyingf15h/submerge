@@ -50,14 +50,48 @@ Global Theme. `./uninstall.sh` removes it. Needs Plasma 5.27.
 - **Ripples:** Qt 5 has no `RGBA16F` enum, so `Pond.qml` sets the GL format (`0x881A`) at
   runtime to keep the half-float height field.
 - **MultiEffect** (Qt 6.5) is replaced by `ShadowFx.qml` (blurred tinted shadow plus brightness)
-  and `BlurFx.qml` (saturation plus blur), built on QtGraphicalEffects. The blur falloff is
-  matched by eye, so glows can differ very slightly.
+  and, for the foreground fish, a saturation boost inside `glitch.frag`. Blurs run at reduced
+  resolution in `SoftBlur.qml`; the falloff is matched by eye, so glows can differ very slightly.
 - **FrameAnimation** (Qt 6.4) is replaced by `FrameTicker.qml`, driven by the render loop.
 - **QML / JS:** the fish moved from an inline component to `Koi.qml` (Qt 5.15 compiles inline
   component functions twice), optional chaining is rewritten, and the HUD and tank readout
   models look values up by name, since Qt 5 drops functions from array models.
 - **Plasma APIs:** `WallpaperItem` becomes a plain `Item` reading `wallpaper.configuration`,
   `P5Support.DataSource` becomes `PlasmaCore.DataSource`, and imports are versioned.
+
+## Performance
+
+Tuned to run on integrated graphics across two high-refresh screens. With the defaults it does
+about a fifth of the GPU work of the first port, and nothing at all while paused. All of these
+are under Performance in the wallpaper settings:
+
+- **Frame rate limit** (default 10 fps). Plasma 5 redraws at the screen's refresh rate, which on
+  a 144 or 165 Hz screen meant redrawing the whole pond ~150 times a second. The fish, the
+  scanner, the HUD bars and the ripple simulation all advance on the same capped frames; the
+  simulation does up to three steps per frame, on a half-resolution grid below 20 fps, so the
+  ripples keep their speed.
+- **Pause when covered** by a maximized or fullscreen window, per screen. Show Desktop counts as
+  uncovered.
+- **Still frame on battery.** Sensors and the clock drop to once a minute, so it costs about the
+  same as a static wallpaper. Any paused screen does the same, and the `top`/`ps` polling stops.
+- **Optional: only animate the screen in use** (off by default): the one with the focused window,
+  its desktop clicked, or the pointer on its desktop; if that one is covered, the uncovered
+  screens animate instead. Plasma 5 gives every screen its own window and GL context, so one
+  rendered pond can't be mirrored to several screens.
+- Glows are blurred at 1/4 resolution and the foreground fish at 1/8 (`SoftBlur.qml`), each
+  foreground fish is a single full-screen pass, and the procedural caustics only cover the top
+  third of the screen.
+
+## Lock screen and sign-in screen
+
+- **Lock screen:** in `~/.config/kscreenlockerrc` set `[Greeter] WallpaperPlugin=org.submerge.wallpaper`
+  and `[Greeter][Wallpaper][org.submerge.wallpaper][General] LockScreen=true` (the lock screen
+  hides every window, so the cover checks are skipped there). The Breeze lock screen UI is drawn
+  on top.
+- **Sign-in screen (SDDM):** from the release folder, `sudo sddm/install.sh` builds
+  `/usr/share/sddm/themes/submerge` from the installed Breeze theme with the pond behind it (no
+  HUD: its readouts need services that only run after login) and selects it in
+  `/etc/sddm.conf.d/30-submerge-theme.conf`. Undo with `sudo sddm/install.sh --remove`.
 
 ## License
 

@@ -15,6 +15,10 @@ Kirigami.FormLayout {
     property alias cfg_Title: title.text
     property alias cfg_Player: player.text
     property alias cfg_TextScale: textScale.value
+    property alias cfg_PauseWhenCovered: pauseCovered.checked
+    property alias cfg_PauseOnBattery: pauseBattery.checked
+    property alias cfg_ActiveScreenOnly: activeScreen.checked
+    property alias cfg_FrameRate: frameRate.value
 
     QQC2.SpinBox { id: fishCount; Kirigami.FormData.label: "Fish:"; from: 1; to: 40 }
     QQC2.SpinBox { id: fishSize; Kirigami.FormData.label: "Fish size (%):"; from: 40; to: 250; stepSize: 10 }
@@ -30,4 +34,9 @@ Kirigami.FormLayout {
     QQC2.CheckBox { id: lights; text: "Drifting tank lights" }
     QQC2.CheckBox { id: motes; text: "Glowing particles" }
     QQC2.CheckBox { id: ripples; text: "Ripples" }
+
+    QQC2.SpinBox { id: frameRate; Kirigami.FormData.label: "Frame rate limit (fps):"; from: 5; to: 165; stepSize: 5 }
+    QQC2.CheckBox { id: pauseBattery; Kirigami.FormData.label: "Performance:"; text: "Hold a still frame on battery" }
+    QQC2.CheckBox { id: activeScreen; text: "With several screens, only animate the one in use" }
+    QQC2.CheckBox { id: pauseCovered; text: "Pause while a maximized or fullscreen window covers the screen" }
 }

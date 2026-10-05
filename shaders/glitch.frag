@@ -7,6 +7,7 @@ uniform float qt_Opacity;
 uniform float time;
 uniform float seed;
 uniform float strength;
+uniform float saturation;
 uniform sampler2D source;
 
 float hash(float n) { return fract(sin(n * 127.1 + seed * 31.7) * 43758.5453); }
@@ -23,10 +24,11 @@ void main() {
     // a constant slight split that widens during a burst
     float split = (0.0018 + 0.004 * burst + 0.0006 * sin(time * 1.3 + seed)) * strength;
     vec4 g = texture2D(source, uv);
-    float r = texture2D(source, uv + vec2(split, 0.0)).r;
-    float b = texture2D(source, uv - vec2(split, 0.0)).b;
-    float a = max(g.a, max(texture2D(source, uv + vec2(split, 0.0)).a, texture2D(source, uv - vec2(split, 0.0)).a));
-    vec3 col = vec3(r, g.g, b);
+    vec4 rs = texture2D(source, uv + vec2(split, 0.0));
+    vec4 bs = texture2D(source, uv - vec2(split, 0.0));
+    float a = max(g.a, max(rs.a, bs.a));
+    vec3 col = vec3(rs.r, g.g, bs.b);
+    col = max(mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.0 + saturation), 0.0);
     col *= 0.94 + 0.06 * sin(uv.y * 900.0 + time * 6.0);   // scanlines
     col += vec3(0.0, 0.05, 0.12) * a * burst;                // cold flash while glitching
     gl_FragColor = vec4(col, a) * qt_Opacity;

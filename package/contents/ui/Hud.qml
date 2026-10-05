@@ -13,6 +13,8 @@ Item {
     property real mouseX: -9999
     property real mouseY: -9999
     property real textScale: 1
+    property bool running: true
+    property bool lowPower: false   // sensors and clock update once a minute (set while paused)
 
     readonly property real u: height / 1080 * textScale
     readonly property color ink: "#eef4ff"
@@ -22,22 +24,47 @@ Item {
     readonly property string cond: "IBM Plex Sans Condensed"
     property date now: new Date()
 
+    // every second normally; on battery only on the minute, so a still desktop stays still
     Timer {
+        id: clock
         interval: 1000; running: hud.visible; repeat: true; triggeredOnStart: true
-        onTriggered: hud.now = new Date()
+        onTriggered: {
+            hud.now = new Date();
+            interval = hud.lowPower ? (60 - hud.now.getSeconds()) * 1000 + 50 : 1000;
+        }
     }
+    onLowPowerChanged: clock.restart()
 
     // ---- live system sensors ----
-    Sensors.Sensor { id: cpu; sensorId: "cpu/all/usage"; updateRateLimit: 1500 }
-    Sensors.Sensor { id: gpu; sensorId: "gpu/all/usage"; updateRateLimit: 1500 }
-    Sensors.Sensor { id: mem; sensorId: "memory/physical/usedPercent"; updateRateLimit: 2000 }
-    Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: 1500 }
-    Sensors.Sensor { id: disk; sensorId: "disk/all/usedPercent"; updateRateLimit: 10000 }
-    Sensors.Sensor { id: temp; sensorId: "cpu/all/averageTemperature"; updateRateLimit: 3000 }
-    Sensors.Sensor { id: uptime; sensorId: "os/system/uptime"; updateRateLimit: 30000 }
+    Sensors.Sensor { id: cpu; sensorId: "cpu/all/usage"; updateRateLimit: hud.lowPower ? 60000 : 1500 }
+    Sensors.Sensor { id: gpu; sensorId: "gpu/all/usage"; updateRateLimit: hud.lowPower ? 60000 : 1500 }
+    Sensors.Sensor { id: mem; sensorId: "memory/physical/usedPercent"; updateRateLimit: hud.lowPower ? 60000 : 2000 }
+    Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: hud.lowPower ? 60000 : 1500 }
+    Sensors.Sensor { id: disk; sensorId: "disk/all/usedPercent"; updateRateLimit: hud.lowPower ? 60000 : 10000 }
+    Sensors.Sensor { id: temp; sensorId: "cpu/all/averageTemperature"; updateRateLimit: hud.lowPower ? 60000 : 3000 }
+    Sensors.Sensor { id: uptime; sensorId: "os/system/uptime"; updateRateLimit: hud.lowPower ? 60000 : 30000 }
     Sensors.Sensor { id: host; sensorId: "os/system/hostname" }
     Sensors.Sensor { id: plasma; sensorId: "os/plasma/plasmaVersion" }
     Sensors.Sensor { id: kernel; sensorId: "os/kernel/prettyName" }
+
+    // battery: pushed by the power management engine when it changes, no polling
+    PlasmaCore.DataSource {
+        id: power
+        engine: "powermanagement"
+        connectedSources: ["Battery", "AC Adapter"]
+    }
+    readonly property var battery: power.data["Battery"] || ({})
+    readonly property bool hasBattery: !!battery["Has Battery"]
+    readonly property real batteryPct: battery["Percent"] || 0
+    readonly property string batteryState: {
+        const st = battery["State"], ac = (power.data["AC Adapter"] || {})["Plugged in"];
+        return st === "Charging" ? "CHARGING" : st === "FullyCharged" ? "FULLY CHARGED"
+             : ac ? "ON AC POWER" : "ON BATTERY";
+    }
+    readonly property color good: "#5fe08f"
+    readonly property color low: "#ff4d5e"
+    // green when there's plenty left, orange getting low, red nearly empty
+    readonly property color batteryColor: batteryPct > 50 ? good : batteryPct > 20 ? hot : low
 
     // which app is using the most CPU and memory (processes with the same name added together)
     property string topCpu: ""
@@ -46,7 +73,7 @@ Item {
     readonly property string memCmd: "ps -eo comm,rss --no-headers | awk '{a[$1]+=$2} END{for(k in a) print a[k], k}' | sort -rn | head -1"
     PlasmaCore.DataSource {
         engine: "executable"
-        connectedSources: hud.visible ? [hud.cpuCmd, hud.memCmd] : []
+        connectedSources: hud.visible && hud.running ? [hud.cpuCmd, hud.memCmd] : []
         interval: 4000
         onNewData: {
             const source = sourceName;
@@ -72,8 +99,13 @@ Item {
         case "GPU":     return { sub: "RENDER LOAD", v: Math.round(pct(gpu.value)) + "%", f: pct(gpu.value) / 100 };
         case "MEMORY":  return { sub: hud.topMem ? "TOP: " + hud.topMem : "PHYSICAL RAM", v: Math.round(pct(mem.value)) + "%", f: pct(mem.value) / 100 };
         case "NETWORK": return { sub: "DOWNLINK", v: "↓ " + rate(down.value), f: Math.min(1, (down.value || 0) / 5242880) };
+        case "BATTERY": return { sub: hud.batteryState, v: Math.round(hud.batteryPct) + "%", f: hud.batteryPct / 100 };
         default:        return { sub: "DISK USED", v: Math.round(pct(disk.value)) + "%", f: pct(disk.value) / 100 };
         }
+    }
+    // called by the pond's frame ticker
+    function step(dt) {
+        for (let i = 0; i < rows.count; i++) { const r = rows.itemAt(i); if (r) r.step(dt); }
     }
     readonly property bool busy: pct(cpu.value) > 85 || pct(mem.value) > 90
 
@@ -163,13 +195,14 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 3 * hud.u
                 Mono { text: Qt.formatDateTime(hud.now, "ddd dd MMM yyyy").toUpperCase(); font.pixelSize: 11 * hud.u }
-                Mono { text: ":" + Qt.formatDateTime(hud.now, "ss") + "   UP " + hud.span(uptime.value); font.pixelSize: 10 * hud.u; opacity: 0.9 }
+                Mono { text: (hud.lowPower ? "" : ":" + Qt.formatDateTime(hud.now, "ss") + "   ") + "UP " + hud.span(uptime.value); font.pixelSize: 10 * hud.u; opacity: 0.9 }
             }
         }
         Item { width: 1; height: 40 * hud.u }
 
         // live readouts, laid out like the menu in the video
         Repeater {
+            id: rows
             // Qt 5 drops functions from array models, so each row looks its values up by name
             model: [
                 { n: "01", en: "CPU" },
@@ -177,23 +210,34 @@ Item {
                 { n: "03", en: "MEMORY" },
                 { n: "04", en: "NETWORK" },
                 { n: "05", en: "STORAGE" }
-            ]
+            ].concat(hud.hasBattery ? [{ n: "06", en: "BATTERY" }] : [])
             Item {
                 id: row
                 required property var modelData
                 required property int index
                 width: 360 * hud.u
                 height: 58 * hud.u
-                readonly property real level: { cpu.value; gpu.value; mem.value; down.value; disk.value; return hud.readout(modelData.en).f; }
-                readonly property bool high: level > 0.85
+                readonly property real level: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return hud.readout(modelData.en).f; }
+                readonly property bool isBattery: modelData.en === "BATTERY"
+                readonly property bool high: !isBattery && level > 0.85
+                // colour of the value and level bar: battery goes green / orange / red
+                readonly property color accent: isBattery ? hud.batteryColor : high ? hud.hot : hud.line
                 // the highlight drifts down the list slowly, like an idle menu cursor
-                readonly property bool lit: Math.floor(hud.t / 6) % 5 === index
+                readonly property bool lit: Math.floor(hud.t / 6) % rows.count === index
+                // eased by step() on the pond's frames; set straight away while paused
+                property real shownLevel: level
+                property real shownLit: lit ? 0.4 : 0
+                function step(dt) {
+                    shownLevel += (level - shownLevel) * (1 - Math.exp(-dt / 0.25));
+                    shownLit += ((lit ? 0.4 : 0) - shownLit) * (1 - Math.exp(-dt / 0.2));
+                }
+                onLevelChanged: if (!hud.running) shownLevel = level
+                onLitChanged: if (!hud.running) shownLit = lit ? 0.4 : 0
 
                 Rectangle {
                     anchors.fill: parent
                     anchors.bottomMargin: 6 * hud.u
-                    opacity: row.lit ? 0.4 : 0
-                    Behavior on opacity { NumberAnimation { duration: 600 } }
+                    opacity: row.shownLit
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0; color: row.high ? hud.hot : "#3d6dff" }
@@ -215,15 +259,15 @@ Item {
                     anchors.verticalCenterOffset: -3 * hud.u
                     spacing: 3 * hud.u
                     Mono { text: row.modelData.en; font.pixelSize: 15 * hud.u; font.letterSpacing: 3.5 * hud.u }
-                    Mono { text: { hud.topCpu; hud.topMem; return hud.readout(row.modelData.en).sub; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
+                    Mono { text: { hud.topCpu; hud.topMem; hud.batteryState; return hud.readout(row.modelData.en).sub; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
                 }
                 Mono {
                     anchors.right: parent.right
                     anchors.rightMargin: 8 * hud.u
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: -3 * hud.u
-                    text: { cpu.value; gpu.value; mem.value; down.value; disk.value; return hud.readout(row.modelData.en).v; }
-                    color: row.high ? hud.hot : hud.ink
+                    text: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return hud.readout(row.modelData.en).v; }
+                    color: row.isBattery ? hud.batteryColor : row.high ? hud.hot : hud.ink
                     font.pixelSize: 14 * hud.u
                 }
                 // baseline doubles as a level meter
@@ -233,10 +277,9 @@ Item {
                     color: hud.line; opacity: 0.3
                 }
                 Rectangle {
-                    width: parent.width * row.level; height: Math.max(2, 2 * hud.u)
+                    width: parent.width * row.shownLevel; height: Math.max(2, 2 * hud.u)
                     anchors.bottom: parent.bottom
-                    color: row.high ? hud.hot : hud.line
-                    Behavior on width { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+                    color: row.accent
                 }
             }
         }
@@ -285,7 +328,6 @@ Item {
                         height: Math.max(1, parent.height - 4 * hud.u)
                         width: (parent.width - 4 * hud.u) * Math.max(0.03, Math.min(1, ((temp.value || 30) - 30) / 70))
                         color: (temp.value || 0) > 85 ? hud.hot : hud.ink
-                        Behavior on width { NumberAnimation { duration: 1200 } }
                     }
                 }
             }

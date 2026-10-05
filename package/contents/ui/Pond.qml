@@ -24,6 +24,9 @@ Item {
     property string player: "GUEST"
     property real textScale: 1.0
     property bool running: true
+    property real maxFps: 10            // 0 = redraw every screen refresh
+    property bool lowPower: false       // on battery: no live sensors, clock updated once a minute
+    readonly property bool pointerInside: mouseX > -9000
 
     readonly property url img: Qt.resolvedUrl("../images/")
     readonly property url shaders: Qt.resolvedUrl("../shaders/")
@@ -95,8 +98,12 @@ Item {
     readonly property real lightY: -height * 0.4
 
     // ---- real ripples: a damped wave equation on a height field covering the screen ----
-    readonly property int simW: 512
-    readonly property int simH: Math.max(64, Math.round(512 * height / Math.max(1, width)))
+    // below 20 fps a half-resolution field keeps the ripples at full speed: each step moves a wave
+    // twice as far, so 30 steps a second (three per frame at 10 fps) are enough
+    readonly property bool coarseSim: maxFps > 0 && maxFps < 20
+    readonly property int simW: coarseSim ? 256 : 512
+    readonly property real simRate: coarseSim ? 30 : 60
+    readonly property int simH: Math.max(32, Math.round(simW * height / Math.max(1, width)))
     property var pendingDrops: []
     function drop(px, py, radius, strength, delay) {
         if (!ripples || pendingDrops.length > 24) return;
@@ -113,7 +120,8 @@ Item {
         blending: false
         property variant prev: simSrc
         property vector2d texel: Qt.vector2d(1 / pond.simW, 1 / pond.simH)
-        property real damping: 0.975
+        property real damping: pond.coarseSim ? 0.95 : 0.975   // the same fade per second
+        property real steps: 1
         property real simAspect: pond.width / Math.max(1, pond.height)
         property vector4d drop0: Qt.vector4d(0, 0, 0, 0)
         property vector4d drop1: Qt.vector4d(0, 0, 0, 0)
@@ -133,24 +141,25 @@ Item {
         Component.onCompleted: format = 0x881A
         textureSize: Qt.size(pond.simW, pond.simH)
     }
-    // step the simulation at a steady 60Hz whatever the screen refresh rate is
-    Timer {
-        running: pond.ripples && pond.running && pond.visible
-        repeat: true
-        interval: 16
-        onTriggered: {
-            const z = Qt.vector4d(0, 0, 0, 0);
-            const due = [];
-            pond.pendingDrops = pond.pendingDrops.filter(p => {
-                if (p.at <= pond.t && due.length < 4) { due.push(p.v); return false; }
-                return true;
-            });
-            simStep.drop0 = due[0] || z;
-            simStep.drop1 = due[1] || z;
-            simStep.drop2 = due[2] || z;
-            simStep.drop3 = due[3] || z;
-            simSrc.scheduleUpdate();
-        }
+    // step the simulation at a steady rate whatever the frame rate is: up to three steps per frame
+    property real simAcc: 0
+    function simTick(dt) {
+        simAcc = Math.min(simAcc + dt, 4 / simRate);
+        if (simAcc < 0.5 / simRate) return;
+        const steps = Math.min(3, Math.round(simAcc * simRate));
+        simAcc = Math.max(0, simAcc - steps / simRate);
+        const z = Qt.vector4d(0, 0, 0, 0);
+        const due = [];
+        pendingDrops = pendingDrops.filter(p => {
+            if (p.at <= t && due.length < 4) { due.push(p.v); return false; }
+            return true;
+        });
+        simStep.drop0 = due[0] || z;
+        simStep.drop1 = due[1] || z;
+        simStep.drop2 = due[2] || z;
+        simStep.drop3 = due[3] || z;
+        simStep.steps = steps;
+        simSrc.scheduleUpdate();
     }
     // the odd drip landing somewhere on the water
     Timer {
@@ -172,9 +181,11 @@ Item {
 
     FrameTicker {
         running: pond.running && pond.visible
+        maxFps: pond.maxFps
         onTriggered: {
             const dt = Math.min(frameTime, 0.05);
             pond.t += dt;
+            if (pond.ripples) pond.simTick(dt);
             pond.mouseSpeed *= Math.pow(0.02, dt);
             for (let i = 0; i < fishRep.count; i++) { const it = fishRep.itemAt(i); if (it) it.step(dt); }
             // small fish give each other room so the pond never looks crowded in one spot
@@ -209,6 +220,7 @@ Item {
             }
             if (pond.motes)
                 for (let j = 0; j < moteRep.count; j++) { const it = moteRep.itemAt(j); if (it) it.step(dt); }
+            if (pond.hud) { cyber.step(dt); hud.step(dt); }
         }
     }
 
@@ -315,9 +327,13 @@ Item {
             }
         }
 
+        // the caustics and lamp glow fade to nothing a third of the way down, so only the top
+        // band is drawn; the rest of the screen skips this expensive shader entirely
         ShaderEffect {
-            anchors.fill: parent
+            width: parent.width
+            height: parent.height * span
             visible: pond.lights
+            property real span: 0.34
             property real time: pond.t
             property real aspect: pond.width / Math.max(1, pond.height)
             property real strength: 1.1
@@ -403,6 +419,7 @@ Item {
         }
 
         Cyber {
+            id: cyber
             anchors.fill: parent
             visible: pond.hud
             fishItems: fishRep
@@ -415,11 +432,15 @@ Item {
         }
 
         Hud {
+            id: hud
             anchors.fill: parent
             visible: pond.hud
             title: pond.title
             player: pond.player
             textScale: pond.textScale
+            running: pond.running
+            // a paused pond (battery, covered, or the screen not in use) only updates once a minute
+            lowPower: pond.lowPower || !pond.running
             t: pond.t
             mouseX: pond.mouseX
             mouseY: pond.mouseY
@@ -443,25 +464,13 @@ Item {
                 id: fgHolder
                 required property int index
                 anchors.fill: parent
-                // only the first one swims in full view; the others stay faint at the edges
-                opacity: index === 0 ? 0.88 : 0.5
-                layer.enabled: true
-                layer.effect: ShaderEffect {
-                    property real time: pond.t
-                    property real seed: fgHolder.index * 7.3 + 1.1
-                    property real strength: 1.0
-                    fragmentShader: pond.shaders + "glitch.frag"
-                }
                 readonly property Item fish: fgFish
                 function step(dt) { fgFish.step(dt); }
+                // it ends up heavily blurred anyway, so draw it at 1/8 size, blur it there, and
+                // let the glitch pass stretch it back up to full screen
                 Item {
+                    id: fgSrc
                     anchors.fill: parent
-                    layer.enabled: true
-                    layer.effect: BlurFx {
-                        blur: 1.0
-                        blurMax: 84
-                        saturation: 0.2
-                    }
                     Koi {
                         id: fgFish
                         index: fgHolder.index
@@ -473,6 +482,31 @@ Item {
                         fx: fgHolder.index === 0 ? pond.width * (0.4 + Math.random() * 0.2) : fgHolder.index % 2 ? -pond.width * 0.02 : pond.width * 1.02
                         fy: pond.height * (0.3 + Math.random() * 0.4)
                     }
+                }
+                ShaderEffectSource {
+                    id: fgTex
+                    sourceItem: fgSrc
+                    hideSource: true
+                    visible: false
+                    smooth: true
+                    textureSize: Qt.size(fgBlur.width, fgBlur.height)
+                }
+                SoftBlur {
+                    id: fgBlur
+                    width: Math.max(1, Math.ceil(pond.width / 8)); height: Math.max(1, Math.ceil(pond.height / 8))
+                    source: fgTex
+                    deviation: 3.2
+                }
+                ShaderEffect {
+                    anchors.fill: parent
+                    // only the first one swims in full view; the others stay faint at the edges
+                    opacity: fgHolder.index === 0 ? 0.88 : 0.5
+                    property variant source: fgBlur.output
+                    property real time: pond.t
+                    property real seed: fgHolder.index * 7.3 + 1.1
+                    property real strength: 1.0
+                    property real saturation: 0.2
+                    fragmentShader: pond.shaders + "glitch.frag"
                 }
             }
         }

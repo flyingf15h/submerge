@@ -189,10 +189,8 @@ Item {
         }
     }
 
-    FrameTicker {
-        running: cyber.visible
-        onTriggered: box.step(Math.min(frameTime, 0.05))
-    }
+    // called by the pond's frame ticker, so it moves on the same frames as the fish
+    function step(dt) { box.step(dt); }
 
     // ---- depth ruler down the right edge ----
     Item {
