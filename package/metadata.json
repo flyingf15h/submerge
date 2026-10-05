@@ -11,7 +11,7 @@
         "Id": "org.submerge.wallpaper",
         "License": "GPL-3.0-or-later",
         "Name": "Submerge",
-        "Version": "1.3"
+        "Version": "1.4"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
 }

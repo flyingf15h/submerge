@@ -26,6 +26,7 @@ WallpaperItem {
         slowWhenUnfocused: root.configuration.SlowWhenUnfocused
         lockScreen: root.configuration.LockScreen
         slowOnBattery: root.configuration.SlowOnBattery
+        freezeOnBattery: root.configuration.FreezeOnBattery
         lowFps: root.configuration.LowFrameRate
         fps: root.configuration.FrameRate
     }

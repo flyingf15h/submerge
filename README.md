@@ -16,11 +16,11 @@ A late night koi pond for KDE Plasma 6, styled like an old game loading screen.
 
 ## Install
 
-Grab `submerge-1.3.tar.gz` from [Releases](../../releases), then:
+Grab `submerge-1.4.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.3.tar.gz
-cd submerge-1.3
+tar xzf submerge-1.4.tar.gz
+cd submerge-1.4
 ./install.sh --apply
 ```
 
@@ -52,7 +52,7 @@ For the sign-in screen (SDDM), the release has an `sddm` folder with Breeze's lo
 the pond. It installs system-wide, so it needs sudo:
 
 ```sh
-cd submerge-1.3/sddm
+cd submerge-1.4/sddm
 sudo ./install.sh            # undo with: sudo ./install.sh --remove
 ```
 

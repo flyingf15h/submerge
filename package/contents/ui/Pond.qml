@@ -31,6 +31,7 @@ Item {
     // on the lock screen every window is hidden, so the window checks don't apply there
     property bool lockScreen: false
     property bool slowOnBattery: true
+    property bool freezeOnBattery: true
     property int fps: 20
     property int lowFps: 10
     // room taken by a panel along the bottom of the screen, so the HUD sits above the taskbar
@@ -43,15 +44,17 @@ Item {
     P5Support.DataSource {
         id: power
         engine: "powermanagement"
-        connectedSources: pond.slowOnBattery ? ["AC Adapter", "Battery"] : []
+        connectedSources: pond.slowOnBattery || pond.freezeOnBattery ? ["AC Adapter", "Battery"] : []
     }
     readonly property bool onBattery: !!power.data["Battery"] && !!power.data["Battery"]["Has Battery"]
                                       && !!power.data["AC Adapter"] && power.data["AC Adapter"]["Plugged in"] === false
 
-    // Only stop completely when the pond can't be seen at all (a maximized or fullscreen window
-    // covers it). While you're working in a window, or on battery, it keeps swimming at a lower
-    // frame rate instead of freezing.
-    readonly property bool active: running && visible && !covered
+    // Stop completely when the pond can't be seen at all (a maximized or fullscreen window covers
+    // it), and on battery whenever you're working in a window: every animated frame makes the
+    // compositor redraw the whole screen, which costs real battery even at a low frame rate.
+    // Otherwise, while you're in a window, it keeps swimming at a lower frame rate.
+    readonly property bool batteryHold: freezeOnBattery && onBattery && unfocused && !lockScreen
+    readonly property bool active: running && visible && !covered && !batteryHold
     readonly property bool lowPower: (slowWhenUnfocused && unfocused && !lockScreen) || (slowOnBattery && onBattery)
     readonly property real liveFps: lowPower ? Math.min(fps, lowFps) : fps
 
