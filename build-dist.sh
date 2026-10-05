@@ -3,7 +3,7 @@
 # theme (with splash) and fonts, plus install/uninstall scripts for whoever downloads it.
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION=1.0
+VERSION=1.1
 OUT=dist/submerge-$VERSION
 rm -rf "$OUT" && mkdir -p "$OUT"/{wallpaper,desktoptheme,look-and-feel,color-schemes,fonts}
 

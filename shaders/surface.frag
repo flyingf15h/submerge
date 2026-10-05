@@ -10,6 +10,7 @@ layout(std140, binding = 0) uniform buf {
     float time;
     float aspect;
     float strength;
+    float yScale;   // the item only covers this fraction of the screen, from the top
 };
 
 float caustic(vec2 p, float t) {
@@ -27,7 +28,7 @@ float caustic(vec2 p, float t) {
 }
 
 void main() {
-    vec2 uv = qt_TexCoord0;
+    vec2 uv = vec2(qt_TexCoord0.x, qt_TexCoord0.y * yScale);
     vec2 p = vec2(uv.x * aspect, uv.y);
     // stretch the pattern sideways near the top, like looking toward the lit end of the tank
     vec2 q = vec2(p.x * (0.55 + uv.y * 0.6), p.y * 1.3);

@@ -15,14 +15,14 @@ Item {
     property real mouseY: -9999
     property real textScale: 1
     readonly property bool pointing: mouseX > -9000
+    readonly property int slowT: Math.floor(t)
 
     readonly property real u: height / 1080 * textScale
     readonly property color ink: "#e6efff"
     readonly property color line: "#9fbaff"
     readonly property string mono: "IBM Plex Mono"
 
-    layer.enabled: true
-    layer.effect: MultiEffect {
+    component Glow: MultiEffect {
         shadowEnabled: true
         shadowColor: "#3f73ff"
         shadowBlur: 0.7
@@ -163,6 +163,8 @@ Item {
         Column {
             x: box.width + 40 * cyber.u
             y: -8 * cyber.u
+            layer.enabled: true
+            layer.effect: Glow {}
             spacing: 2 * cyber.u
             Mono {
                 text: !box.target ? "" : box.target.blur ? "SPECIMEN K-???" : "SPECIMEN K-" + String(box.target.id).padStart(2, "0")
@@ -181,10 +183,8 @@ Item {
         }
     }
 
-    FrameAnimation {
-        running: cyber.visible
-        onTriggered: box.step(Math.min(frameTime, 0.05))
-    }
+    // driven by the pond's frame timer
+    function tick(dt) { if (visible) box.step(dt); }
 
     // ---- depth ruler down the right edge ----
     Item {
@@ -220,19 +220,20 @@ Item {
     // ---- tank telemetry ----
     Column {
         x: cyber.width - 290 * cyber.u
+        layer.enabled: true
+        layer.effect: Glow {}
         y: cyber.height * 0.42
         spacing: 5 * cyber.u
         opacity: 0.92
-        readonly property real wob: Math.sin(cyber.t * 0.07)
 
         Mono { text: "// TANK 03  —  BOOT " + (cyber.cond ? (cyber.cond.seed % 65536).toString(16).toUpperCase().padStart(4, "0") : "----"); font.pixelSize: 10 * cyber.u; opacity: 0.92 }
         Rectangle { width: 210 * cyber.u; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.45 }
         Repeater {
             model: [
-                { k: "TEMP", v: () => cyber.cond ? (cyber.cond.temp + 0.1 * Math.sin(cyber.t * 0.05)).toFixed(1) + " °C" : "--", f: () => cyber.cond ? (cyber.cond.temp - 18) / 10 : 0 },
-                { k: "PH", v: () => cyber.cond ? (cyber.cond.ph + 0.02 * Math.sin(cyber.t * 0.03 + 1)).toFixed(2) : "--", f: () => cyber.cond ? (cyber.cond.ph - 6.2) / 2 : 0 },
+                { k: "TEMP", v: () => cyber.cond ? (cyber.cond.temp + 0.1 * Math.sin(cyber.slowT * 0.05)).toFixed(1) + " °C" : "--", f: () => cyber.cond ? (cyber.cond.temp - 18) / 10 : 0 },
+                { k: "PH", v: () => cyber.cond ? (cyber.cond.ph + 0.02 * Math.sin(cyber.slowT * 0.03 + 1)).toFixed(2) : "--", f: () => cyber.cond ? (cyber.cond.ph - 6.2) / 2 : 0 },
                 { k: "O₂", v: () => cyber.cond ? Math.round(cyber.cond.o2) + " %" : "--", f: () => cyber.cond ? (cyber.cond.o2 - 80) / 20 : 0 },
-                { k: "FLOW", v: () => cyber.cond ? (cyber.cond.flow + 0.01 * Math.sin(cyber.t * 0.11)).toFixed(2) + " L/s" : "--", f: () => cyber.cond ? cyber.cond.flow / 0.7 : 0 },
+                { k: "FLOW", v: () => cyber.cond ? (cyber.cond.flow + 0.01 * Math.sin(cyber.slowT * 0.11)).toFixed(2) + " L/s" : "--", f: () => cyber.cond ? cyber.cond.flow / 0.7 : 0 },
                 { k: "SPECIMENS", v: () => String((cyber.fishItems ? cyber.fishItems.count : 0) + (cyber.fgItems ? cyber.fgItems.count : 0)), f: () => 1 },
                 { k: "THRIVING", v: () => cyber.cond ? cyber.cond.dominant : "--", f: () => 1 }
             ]
@@ -241,7 +242,7 @@ Item {
                 width: 210 * cyber.u
                 height: 16 * cyber.u
                 Mono { text: modelData.k; opacity: 0.92 }
-                Mono { anchors.right: parent.right; text: { cyber.t; cyber.cond; return modelData.v(); } }
+                Mono { anchors.right: parent.right; text: { cyber.slowT; cyber.cond; return modelData.v(); } }
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.18

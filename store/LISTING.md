@@ -10,7 +10,7 @@ Archives are in `dist/store/` after running `./build-dist.sh`. Screenshots are i
 
 - **Category:** Plasma 6 Add-Ons > Plasma 6 Wallpaper Plugins
 - **Title:** Submerge
-- **File:** `dist/store/submerge-wallpaper-1.0.tar.gz`
+- **File:** `dist/store/submerge-wallpaper-1.1.tar.gz`
 - **License:** GPLv3 (artwork CC BY-NC-SA 4.0, mention in the description)
 - **Tags:** koi, fish, aquarium, water, animated, live wallpaper, cyberpunk, hud, dark, blue
 - **Summary:** A late night koi pond with a sci-fi tank monitor HUD
@@ -35,7 +35,7 @@ Needs Plasma 6. For the full look, also grab the Submerge global theme, Plasma s
 
 Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: https://github.com/flyingf15h/submerge
 
-**Changelog (1.0):** First release.
+**Changelog (1.1):** Much lighter on CPU and battery: capped frame rate, pauses while you're using a window or on battery.
 
 ---
 
@@ -43,7 +43,7 @@ Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: htt
 
 - **Category:** Plasma 6 Add-Ons > Plasma Themes
 - **Title:** Submerge
-- **File:** `dist/store/submerge-plasma-style-1.0.tar.gz`
+- **File:** `dist/store/submerge-plasma-style-1.1.tar.gz`
 - **License:** GPLv3
 - **Tags:** dark, blue, navy, cyberpunk, hud, panel, taskbar
 - **Summary:** Navy glass panel with a glowing edge, made for the Submerge wallpaper
@@ -57,7 +57,7 @@ Submerge colour scheme.
 
 Made to go with the Submerge wallpaper, but it works fine on its own.
 
-**Changelog (1.0):** First release.
+**Changelog (1.1):** Much lighter on CPU and battery: capped frame rate, pauses while you're using a window or on battery.
 
 ---
 
@@ -75,7 +75,7 @@ Made to go with the Submerge wallpaper, but it works fine on its own.
 Deep navy windows, pale blue text, electric blue selections and warm orange for links you've
 visited and things that need attention. Made for the Submerge wallpaper.
 
-**Changelog (1.0):** First release.
+**Changelog (1.1):** Much lighter on CPU and battery: capped frame rate, pauses while you're using a window or on battery.
 
 ---
 
@@ -83,7 +83,7 @@ visited and things that need attention. Made for the Submerge wallpaper.
 
 - **Category:** Plasma 6 Add-Ons > Global Themes (Plasma 6)
 - **Title:** Submerge
-- **File:** `dist/store/submerge-global-theme-1.0.tar.gz`
+- **File:** `dist/store/submerge-global-theme-1.1.tar.gz`
 - **License:** GPLv3
 - **Tags:** koi, fish, aquarium, dark, blue, cyberpunk, hud, animated
 - **Summary:** A late night koi pond desktop, styled like an old game loading screen
@@ -105,4 +105,4 @@ All-in-one download with an install script: https://github.com/flyingf15h/submer
 
 Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3.
 
-**Changelog (1.0):** First release.
+**Changelog (1.1):** Much lighter on CPU and battery: capped frame rate, pauses while you're using a window or on battery.

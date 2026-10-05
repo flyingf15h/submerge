@@ -15,6 +15,10 @@ Kirigami.FormLayout {
     property alias cfg_Title: title.text
     property alias cfg_Player: player.text
     property alias cfg_TextScale: textScale.value
+    property alias cfg_PauseWhenCovered: pauseCovered.checked
+    property alias cfg_PauseWhenUnfocused: pauseUnfocused.checked
+    property alias cfg_PauseOnBattery: pauseBattery.checked
+    property alias cfg_FrameRate: frameRate.value
 
     QQC2.SpinBox { id: fishCount; Kirigami.FormData.label: "Fish:"; from: 1; to: 40 }
     QQC2.SpinBox { id: fishSize; Kirigami.FormData.label: "Fish size (%):"; from: 40; to: 250; stepSize: 10 }
@@ -25,6 +29,10 @@ Kirigami.FormLayout {
     QQC2.TextField { id: player; Kirigami.FormData.label: "User name:"; enabled: hud.checked }
     QQC2.SpinBox { id: textScale; Kirigami.FormData.label: "Text size (%):"; from: 60; to: 200; stepSize: 10; enabled: hud.checked }
 
+    QQC2.CheckBox { id: pauseUnfocused; Kirigami.FormData.label: "Performance:"; text: "Only animate while the desktop is focused (click it or Show Desktop)" }
+    QQC2.CheckBox { id: pauseCovered; text: "Pause when a maximized window covers the desktop" }
+    QQC2.CheckBox { id: pauseBattery; text: "Hold a still frame on battery" }
+    QQC2.SpinBox { id: frameRate; Kirigami.FormData.label: "Frame rate (fps):"; from: 5; to: 60; stepSize: 5 }
     QQC2.CheckBox { id: film; Kirigami.FormData.label: "Effects:"; text: "Film look (grain, colour fringing)" }
     QQC2.CheckBox { id: foreground; text: "Blurry goldfish close to the glass" }
     QQC2.CheckBox { id: lights; text: "Drifting tank lights" }

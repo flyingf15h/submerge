@@ -19,5 +19,9 @@ WallpaperItem {
         player: root.configuration.Player
         textScale: root.configuration.TextScale / 100
         running: root.visible
+        pauseWhenCovered: root.configuration.PauseWhenCovered
+        pauseWhenUnfocused: root.configuration.PauseWhenUnfocused
+        pauseOnBattery: root.configuration.PauseOnBattery
+        fps: root.configuration.FrameRate
     }
 }

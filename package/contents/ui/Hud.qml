@@ -14,6 +14,9 @@ Item {
     property real mouseX: -9999
     property real mouseY: -9999
     property real textScale: 1
+    // while the pond is paused, the clock and readouts only refresh once a minute
+    property bool paused: false
+    readonly property int slow: paused ? 60000 : 1
 
     readonly property real u: height / 1080 * textScale
     readonly property color ink: "#eef4ff"
@@ -24,18 +27,18 @@ Item {
     property date now: new Date()
 
     Timer {
-        interval: 1000; running: hud.visible; repeat: true; triggeredOnStart: true
+        interval: hud.paused ? 60000 : 1000; running: hud.visible; repeat: true; triggeredOnStart: true
         onTriggered: hud.now = new Date()
     }
 
     // ---- live system sensors ----
-    Sensors.Sensor { id: cpu; sensorId: "cpu/all/usage"; updateRateLimit: 1500 }
-    Sensors.Sensor { id: gpu; sensorId: "gpu/all/usage"; updateRateLimit: 1500 }
-    Sensors.Sensor { id: mem; sensorId: "memory/physical/usedPercent"; updateRateLimit: 2000 }
-    Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: 1500 }
-    Sensors.Sensor { id: disk; sensorId: "disk/all/usedPercent"; updateRateLimit: 10000 }
-    Sensors.Sensor { id: temp; sensorId: "cpu/all/averageTemperature"; updateRateLimit: 3000 }
-    Sensors.Sensor { id: uptime; sensorId: "os/system/uptime"; updateRateLimit: 30000 }
+    Sensors.Sensor { id: cpu; sensorId: "cpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
+    Sensors.Sensor { id: gpu; sensorId: "gpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
+    Sensors.Sensor { id: mem; sensorId: "memory/physical/usedPercent"; updateRateLimit: Math.max(2000, hud.slow) }
+    Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: Math.max(1500, hud.slow) }
+    Sensors.Sensor { id: disk; sensorId: "disk/all/usedPercent"; updateRateLimit: Math.max(10000, hud.slow) }
+    Sensors.Sensor { id: temp; sensorId: "cpu/all/averageTemperature"; updateRateLimit: Math.max(3000, hud.slow) }
+    Sensors.Sensor { id: uptime; sensorId: "os/system/uptime"; updateRateLimit: Math.max(30000, hud.slow) }
     Sensors.Sensor { id: host; sensorId: "os/system/hostname" }
     Sensors.Sensor { id: plasma; sensorId: "os/plasma/plasmaVersion" }
     Sensors.Sensor { id: kernel; sensorId: "os/kernel/prettyName" }
@@ -47,7 +50,7 @@ Item {
     readonly property string memCmd: "ps -eo comm,rss --no-headers | awk '{a[$1]+=$2} END{for(k in a) print a[k], k}' | sort -rn | head -1"
     P5Support.DataSource {
         engine: "executable"
-        connectedSources: hud.visible ? [hud.cpuCmd, hud.memCmd] : []
+        connectedSources: hud.visible && !hud.paused ? [hud.cpuCmd, hud.memCmd] : []
         interval: 4000
         onNewData: (source, data) => {
             const name = (data.stdout || "").trim().split(/\s+/).slice(1).join(" ").toUpperCase().slice(0, 16);
@@ -186,7 +189,6 @@ Item {
                     anchors.fill: parent
                     anchors.bottomMargin: 6 * hud.u
                     opacity: row.lit ? 0.4 : 0
-                    Behavior on opacity { NumberAnimation { duration: 600 } }
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0; color: row.high ? hud.hot : "#3d6dff" }
@@ -229,7 +231,6 @@ Item {
                     width: parent.width * row.level; height: Math.max(2, 2 * hud.u)
                     anchors.bottom: parent.bottom
                     color: row.high ? hud.hot : hud.line
-                    Behavior on width { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
                 }
             }
         }
@@ -278,7 +279,6 @@ Item {
                         height: Math.max(1, parent.height - 4 * hud.u)
                         width: (parent.width - 4 * hud.u) * Math.max(0.03, Math.min(1, ((temp.value || 30) - 30) / 70))
                         color: (temp.value || 0) > 85 ? hud.hot : hud.ink
-                        Behavior on width { NumberAnimation { duration: 1200 } }
                     }
                 }
             }

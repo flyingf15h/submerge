@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import org.kde.ksysguard.sensors as Sensors
+import org.kde.plasma.plasma5support as P5Support
 
 // The whole scene. Kept separate from main.qml so it can be run on its own for testing.
 Item {
@@ -25,6 +26,26 @@ Item {
     property string player: "GUEST"
     property real textScale: 1.0
     property bool running: true
+    property bool pauseWhenCovered: true
+    property bool pauseWhenUnfocused: true
+    property bool pauseOnBattery: true
+    property int fps: 20
+    Loader { id: coverLoader; source: "CoverWatcher.qml" }
+    readonly property bool watcherReady: coverLoader.item !== null
+    readonly property bool covered: pauseWhenCovered && watcherReady && coverLoader.item.covered
+    readonly property bool unfocused: pauseWhenUnfocused && watcherReady && !coverLoader.item.focused
+
+    P5Support.DataSource {
+        id: power
+        engine: "powermanagement"
+        connectedSources: pond.pauseOnBattery ? ["AC Adapter", "Battery"] : []
+    }
+    readonly property bool onBattery: pauseOnBattery && !!power.data["Battery"] && !!power.data["Battery"]["Has Battery"]
+                                      && !!power.data["AC Adapter"] && power.data["AC Adapter"]["Plugged in"] === false
+
+    // nothing moves (and nothing redraws) while you're using a window, a maximized or fullscreen
+    // window hides the desktop, or the laptop is on battery
+    readonly property bool active: running && visible && !covered && !unfocused && !onBattery
 
     readonly property url img: Qt.resolvedUrl("../images/")
     readonly property url shaders: Qt.resolvedUrl("../shaders/")
@@ -134,9 +155,9 @@ Item {
     }
     // step the simulation at a steady 60Hz whatever the screen refresh rate is
     Timer {
-        running: pond.ripples && pond.running && pond.visible
+        running: pond.ripples && pond.active
         repeat: true
-        interval: 16
+        interval: 33
         onTriggered: {
             const z = Qt.vector4d(0, 0, 0, 0);
             const due = [];
@@ -153,7 +174,7 @@ Item {
     }
     // the odd drip landing somewhere on the water
     Timer {
-        running: pond.ripples && pond.running
+        running: pond.ripples && pond.active
         repeat: true
         interval: 3000
         onTriggered: {
@@ -163,16 +184,26 @@ Item {
     }
     // and a steady drip from the filter in the top-right corner, always sending out fine rings
     Timer {
-        running: pond.ripples && pond.running
+        running: pond.ripples && pond.active
         repeat: true
         interval: 650
         onTriggered: pond.drop(pond.width * 0.82 + Math.random() * 6, pond.height * 0.2 + Math.random() * 6, 0.006, 0.07)
     }
 
-    FrameAnimation {
-        running: pond.running && pond.visible
+    // A steady, capped frame rate: on a 120 Hz screen per-vsync animation would redraw the
+    // whole 5-megapixel scene 120 times a second for fish that barely move between frames.
+    Timer {
+        interval: Math.round(1000 / pond.fps)
+        repeat: true
+        running: pond.active
+        property real last: 0
+        property real fgAccum: 0
+        onRunningChanged: last = 0
         onTriggered: {
-            const dt = Math.min(frameTime, 0.05);
+            const now = Date.now();
+            const dt = last ? Math.min((now - last) / 1000, 0.1) : interval / 1000;
+            last = now;
+            cyberLayer.tick(dt);
             pond.t += dt;
             pond.mouseSpeed *= Math.pow(0.02, dt);
             for (let i = 0; i < fishRep.count; i++) fishRep.itemAt(i)?.step(dt);
@@ -191,7 +222,12 @@ Item {
                     }
                 }
             }
-            for (let i = 0; i < fgRep.count; i++) fgRep.itemAt(i)?.step(dt);
+            // the big blurry fish are slow and soft, so they only need 15 updates a second
+            fgAccum += dt;
+            if (fgAccum >= 1 / 15) {
+                for (let i = 0; i < fgRep.count; i++) fgRep.itemAt(i)?.step(fgAccum);
+                fgAccum = 0;
+            }
             // the big blurry fish keep their distance from each other instead of piling up
             for (let i = 0; i < fgRep.count; i++) {
                 const a = fgRep.itemAt(i)?.fish;
@@ -346,6 +382,14 @@ Item {
 
         Item {
             rotation: fish.deg + fish.yaw
+            // soft blue light around the body, oriented with the fish
+            Image {
+                visible: !fish.big
+                source: pond.img + "fx/glow.png"
+                x: -fish.len * 0.34; y: -fish.len * 0.18
+                width: fish.len * 0.68; height: fish.len * 1.3
+                opacity: 0.5
+            }
             Image {
                 id: bodyTex
                 source: pond.img + "fish/f" + fish.type + "_" + fish.pal + ".png"
@@ -431,6 +475,8 @@ Item {
             id: floorView
             anchors.fill: parent
             layer.enabled: true
+            layer.textureSize: Qt.size(Math.round(width * 0.6), Math.round(height * 0.6))
+            layer.smooth: true
             layer.effect: ShaderEffect {
                 property variant sim: simSrc
                 property vector2d simTexel: Qt.vector2d(1 / pond.simW, 1 / pond.simH)
@@ -517,7 +563,10 @@ Item {
         }
 
         ShaderEffect {
-            anchors.fill: parent
+            // only the top of the screen ever gets this light, so don't run the shader below it
+            width: parent.width
+            height: parent.height * yScale
+            readonly property real yScale: 0.3
             visible: pond.lights
             property real time: pond.t
             property real aspect: pond.width / Math.max(1, pond.height)
@@ -557,20 +606,10 @@ Item {
         Item { id: shadowLayer; anchors.fill: parent }
         }
 
-        // ---- koi, with a blue rim-light bloom ----
+        // ---- koi ----
         Item {
             id: fishLayer
             anchors.fill: parent
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                shadowEnabled: true
-                shadowColor: "#5d8dff"
-                shadowBlur: 0.7
-                shadowOpacity: 0.85
-                shadowHorizontalOffset: 0
-                shadowVerticalOffset: 0
-                shadowScale: 1.04
-            }
             Repeater {
                 id: fishRep
                 model: pond.ready ? pond.liveFish : 0
@@ -584,7 +623,7 @@ Item {
             visible: pond.motes
             Repeater {
                 id: moteRep
-                model: 45
+                model: 30
                 Image {
                     source: pond.img + "fx/mote.png"
                     property real px: Math.random() * pond.width
@@ -607,6 +646,7 @@ Item {
         }
 
         Cyber {
+            id: cyberLayer
             anchors.fill: parent
             visible: pond.hud
             fishItems: fishRep
@@ -624,6 +664,7 @@ Item {
             title: pond.title
             player: pond.player
             textScale: pond.textScale
+            paused: !pond.active
             t: pond.t
             mouseX: pond.mouseX
             mouseY: pond.mouseY
@@ -650,6 +691,8 @@ Item {
                 // only the first one swims in full view; the others stay faint at the edges
                 opacity: index === 0 ? 0.88 : 0.5
                 layer.enabled: true
+                layer.textureSize: Qt.size(Math.round(width / 4), Math.round(height / 4))
+                layer.smooth: true
                 layer.effect: ShaderEffect {
                     property real time: pond.t
                     property real seed: fgHolder.index * 7.3 + 1.1
@@ -661,10 +704,13 @@ Item {
                 Item {
                     anchors.fill: parent
                     layer.enabled: true
+                    // so soft it can be blurred at an eighth of the screen's resolution
+                    layer.textureSize: Qt.size(Math.round(width / 8), Math.round(height / 8))
+                    layer.smooth: true
                     layer.effect: MultiEffect {
                         blurEnabled: true
                         blur: 1.0
-                        blurMax: 84
+                        blurMax: 12
                         saturation: 0.2
                     }
                     Koi {
