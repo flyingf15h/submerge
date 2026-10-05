@@ -20,9 +20,11 @@ WallpaperItem {
         textScale: root.configuration.TextScale / 100
         running: root.visible
         // the part of the screen not taken by panels, so the HUD clears the taskbar
-        bottomInset: Math.max(0, root.height - (Plasmoid.availableScreenRect.y + Plasmoid.availableScreenRect.height))
+        // (there are no panels on the lock screen, where this isn't available)
+        bottomInset: Plasmoid.availableScreenRect ? Math.max(0, root.height - (Plasmoid.availableScreenRect.y + Plasmoid.availableScreenRect.height)) : 0
         pauseWhenCovered: root.configuration.PauseWhenCovered
         slowWhenUnfocused: root.configuration.SlowWhenUnfocused
+        lockScreen: root.configuration.LockScreen
         slowOnBattery: root.configuration.SlowOnBattery
         lowFps: root.configuration.LowFrameRate
         fps: root.configuration.FrameRate

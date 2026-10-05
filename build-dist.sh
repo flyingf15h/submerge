@@ -3,7 +3,7 @@
 # theme (with splash) and fonts, plus install/uninstall scripts for whoever downloads it.
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION=1.2
+VERSION=1.3
 OUT=dist/submerge-$VERSION
 rm -rf "$OUT" && mkdir -p "$OUT"/{wallpaper,desktoptheme,look-and-feel,color-schemes,fonts}
 
@@ -63,6 +63,7 @@ SH
 chmod +x "$OUT/install.sh" "$OUT/uninstall.sh"
 cp theme/README.md "$OUT/README.md"
 cp LICENSE ART-LICENSE.md "$OUT/"
+cp -r sddm "$OUT/sddm"
 tar -C dist -czf "dist/submerge-$VERSION.tar.gz" "submerge-$VERSION"
 
 # separate archives for the KDE Store, one per item

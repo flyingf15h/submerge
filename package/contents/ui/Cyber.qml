@@ -97,6 +97,9 @@ Item {
                 for (const c of list) {
                     const p = cyber.centreOf(c.fish);
                     const d = (p[0] - cyber.mouseX) ** 2 + (p[1] - cyber.mouseY) ** 2;
+                    // the blurry fish are huge, so their middle is often "nearest"; only lock onto
+                    // one when the cursor is actually on its body
+                    if (c.blur && d > (c.fish.len * 0.3) ** 2) continue;
                     if (d < bestD) { bestD = d; best = c; }
                 }
                 retarget(best);

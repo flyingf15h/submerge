@@ -26,9 +26,40 @@ Item {
     readonly property string cond: "IBM Plex Sans Condensed"
     property date now: new Date()
 
+    // every second normally; while paused only on the minute, so a still desktop stays still
     Timer {
-        interval: hud.paused ? 60000 : 1000; running: hud.visible; repeat: true; triggeredOnStart: true
-        onTriggered: hud.now = new Date()
+        id: clock
+        interval: 1000; running: hud.visible; repeat: true; triggeredOnStart: true
+        onTriggered: {
+            hud.now = new Date();
+            interval = hud.paused ? (60 - hud.now.getSeconds()) * 1000 + 50 : 1000;
+        }
+    }
+    onPausedChanged: clock.restart()
+
+    // battery: pushed by the power management engine when it changes, no polling
+    // (battery row from darshg321's Plasma 5 port)
+    P5Support.DataSource {
+        id: power
+        engine: "powermanagement"
+        connectedSources: ["Battery", "AC Adapter"]
+    }
+    readonly property var battery: power.data["Battery"] || ({})
+    readonly property bool hasBattery: !!battery["Has Battery"]
+    readonly property real batteryPct: battery["Percent"] || 0
+    readonly property string batteryState: {
+        const st = battery["State"], ac = (power.data["AC Adapter"] || {})["Plugged in"];
+        return st === "Charging" ? "CHARGING" : st === "FullyCharged" ? "FULLY CHARGED"
+             : ac ? "ON AC POWER" : "ON BATTERY";
+    }
+    readonly property color good: "#5fe08f"
+    readonly property color low: "#ff4d5e"
+    // green when there's plenty left, orange getting low, red nearly empty
+    readonly property color batteryColor: batteryPct > 50 ? good : batteryPct > 20 ? hot : low
+
+    // called by the pond's frame timer, so the bars ease without full-rate animations
+    function step(dt) {
+        for (let i = 0; i < rows.count; i++) { const r = rows.itemAt(i); if (r) r.step(dt); }
     }
 
     // ---- live system sensors ----
@@ -160,35 +191,50 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 3 * hud.u
                 Mono { text: Qt.formatDateTime(hud.now, "ddd dd MMM yyyy").toUpperCase(); font.pixelSize: 11 * hud.u }
-                Mono { text: ":" + Qt.formatDateTime(hud.now, "ss") + "   UP " + hud.span(uptime.value); font.pixelSize: 10 * hud.u; opacity: 0.9 }
+                Mono { text: (hud.paused ? "" : ":" + Qt.formatDateTime(hud.now, "ss") + "   ") + "UP " + hud.span(uptime.value); font.pixelSize: 10 * hud.u; opacity: 0.9 }
             }
         }
         Item { width: 1; height: 40 * hud.u }
 
         // live readouts, laid out like the menu in the video
         Repeater {
+            id: rows
             model: [
                 { n: "01", en: "CPU",     sub: () => hud.topCpu ? "TOP: " + hud.topCpu : "TOTAL LOAD",  v: () => Math.round(hud.pct(cpu.value)) + "%",  f: () => hud.pct(cpu.value) / 100 },
                 { n: "02", en: "GPU",     sub: "RENDER LOAD", v: () => Math.round(hud.pct(gpu.value)) + "%",  f: () => hud.pct(gpu.value) / 100 },
                 { n: "03", en: "MEMORY",  sub: () => hud.topMem ? "TOP: " + hud.topMem : "PHYSICAL RAM",      v: () => Math.round(hud.pct(mem.value)) + "%",  f: () => hud.pct(mem.value) / 100 },
                 { n: "04", en: "NETWORK", sub: "DOWNLINK",  v: () => "↓ " + hud.rate(down.value),         f: () => Math.min(1, (down.value || 0) / 5242880) },
                 { n: "05", en: "STORAGE", sub: "DISK USED",   v: () => Math.round(hud.pct(disk.value)) + "%", f: () => hud.pct(disk.value) / 100 }
-            ]
+            ].concat(hud.hasBattery ? [
+                { n: "06", en: "BATTERY", sub: () => hud.batteryState, v: () => Math.round(hud.batteryPct) + "%", f: () => hud.batteryPct / 100 }
+            ] : [])
             Item {
                 id: row
                 required property var modelData
                 required property int index
                 width: 360 * hud.u
                 height: 58 * hud.u
-                readonly property real level: { cpu.value; gpu.value; mem.value; down.value; disk.value; return modelData.f(); }
-                readonly property bool high: level > 0.85
+                readonly property real level: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return modelData.f(); }
+                readonly property bool isBattery: modelData.en === "BATTERY"
+                readonly property bool high: !isBattery && level > 0.85
+                // colour of the value and level bar: battery goes green / orange / red
+                readonly property color accent: isBattery ? hud.batteryColor : high ? hud.hot : hud.line
+                // eased by step() on the pond's frames; set straight away while paused
+                property real shownLevel: level
+                property real shownLit: lit ? 0.4 : 0
+                function step(dt) {
+                    shownLevel += (level - shownLevel) * (1 - Math.exp(-dt / 0.25));
+                    shownLit += ((lit ? 0.4 : 0) - shownLit) * (1 - Math.exp(-dt / 0.2));
+                }
+                onLevelChanged: if (hud.paused) shownLevel = level
+                onLitChanged: if (hud.paused) shownLit = lit ? 0.4 : 0
                 // the highlight drifts down the list slowly, like an idle menu cursor
-                readonly property bool lit: Math.floor(hud.t / 6) % 5 === index
+                readonly property bool lit: Math.floor(hud.t / 6) % rows.count === index
 
                 Rectangle {
                     anchors.fill: parent
                     anchors.bottomMargin: 6 * hud.u
-                    opacity: row.lit ? 0.4 : 0
+                    opacity: row.shownLit
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0; color: row.high ? hud.hot : "#3d6dff" }
@@ -210,15 +256,15 @@ Item {
                     anchors.verticalCenterOffset: -3 * hud.u
                     spacing: 3 * hud.u
                     Mono { text: row.modelData.en; font.pixelSize: 15 * hud.u; font.letterSpacing: 3.5 * hud.u }
-                    Mono { text: { hud.topCpu; hud.topMem; const s = row.modelData.sub; return typeof s === "function" ? s() : s; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
+                    Mono { text: { hud.topCpu; hud.topMem; hud.batteryState; const s = row.modelData.sub; return typeof s === "function" ? s() : s; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
                 }
                 Mono {
                     anchors.right: parent.right
                     anchors.rightMargin: 8 * hud.u
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: -3 * hud.u
-                    text: { cpu.value; gpu.value; mem.value; down.value; disk.value; return row.modelData.v(); }
-                    color: row.high ? hud.hot : hud.ink
+                    text: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return row.modelData.v(); }
+                    color: row.isBattery ? hud.batteryColor : row.high ? hud.hot : hud.ink
                     font.pixelSize: 14 * hud.u
                 }
                 // baseline doubles as a level meter
@@ -228,9 +274,9 @@ Item {
                     color: hud.line; opacity: 0.3
                 }
                 Rectangle {
-                    width: parent.width * row.level; height: Math.max(2, 2 * hud.u)
+                    width: parent.width * row.shownLevel; height: Math.max(2, 2 * hud.u)
                     anchors.bottom: parent.bottom
-                    color: row.high ? hud.hot : hud.line
+                    color: row.accent
                 }
             }
         }

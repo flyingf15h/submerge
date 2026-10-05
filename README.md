@@ -16,11 +16,11 @@ A late night koi pond for KDE Plasma 6, styled like an old game loading screen.
 
 ## Install
 
-Grab `submerge-1.2.tar.gz` from [Releases](../../releases), then:
+Grab `submerge-1.3.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.2.tar.gz
-cd submerge-1.2
+tar xzf submerge-1.3.tar.gz
+cd submerge-1.3
 ./install.sh --apply
 ```
 
@@ -37,6 +37,30 @@ Global Theme. `./uninstall.sh` removes it. Needs Plasma 6.
 
 `prep.py` regenerates the tinted fish and water images from the original art, and
 `plasma-style/build.py` builds the panel style.
+
+## Lock screen and sign-in screen
+
+The wallpaper works on the lock screen too. Pick **Submerge** under System Settings >
+Screen Locking > Appearance, or run:
+
+```sh
+kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin org.submerge.wallpaper
+kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.submerge.wallpaper --group General --key LockScreen true
+```
+
+For the sign-in screen (SDDM), the release has an `sddm` folder with Breeze's login form over
+the pond. It installs system-wide, so it needs sudo:
+
+```sh
+cd submerge-1.3/sddm
+sudo ./install.sh            # undo with: sudo ./install.sh --remove
+```
+
+## Plasma 5
+
+[darshg321](https://github.com/darshg321) ported Submerge to Plasma 5.27 on the
+[`plasma5` branch](../../tree/plasma5), and came up with the frame rate cap, multi-step ripples,
+battery readout and lock / sign-in screens that this version now uses too.
 
 ## License
 

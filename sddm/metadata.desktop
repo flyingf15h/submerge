@@ -1,0 +1,14 @@
+[SddmGreeterTheme]
+Name=Submerge
+Description=Breeze login with the Submerge koi pond behind it
+Author=KDE Visual Design Group (Breeze), darshg321 (Submerge sign-in theme)
+License=CC-BY-SA
+Type=sddm-theme
+Version=1.3
+Screenshot=preview.png
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Theme-Id=submerge
+Theme-API=2.0
+QtVersion=6

@@ -28,6 +28,8 @@ Item {
     property bool running: true
     property bool pauseWhenCovered: true
     property bool slowWhenUnfocused: true
+    // on the lock screen every window is hidden, so the window checks don't apply there
+    property bool lockScreen: false
     property bool slowOnBattery: true
     property int fps: 20
     property int lowFps: 10
@@ -35,7 +37,7 @@ Item {
     property real bottomInset: 0
     Loader { id: coverLoader; source: "CoverWatcher.qml" }
     readonly property bool watcherReady: coverLoader.item !== null
-    readonly property bool covered: pauseWhenCovered && watcherReady && coverLoader.item.covered
+    readonly property bool covered: pauseWhenCovered && !lockScreen && watcherReady && coverLoader.item.covered
     readonly property bool unfocused: watcherReady && !coverLoader.item.focused
 
     P5Support.DataSource {
@@ -50,7 +52,7 @@ Item {
     // covers it). While you're working in a window, or on battery, it keeps swimming at a lower
     // frame rate instead of freezing.
     readonly property bool active: running && visible && !covered
-    readonly property bool lowPower: (slowWhenUnfocused && unfocused) || (slowOnBattery && onBattery)
+    readonly property bool lowPower: (slowWhenUnfocused && unfocused && !lockScreen) || (slowOnBattery && onBattery)
     readonly property real liveFps: lowPower ? Math.min(fps, lowFps) : fps
 
     readonly property url img: Qt.resolvedUrl("../images/")
@@ -141,7 +143,9 @@ Item {
         blending: false
         property variant prev: simSrc
         property vector2d texel: Qt.vector2d(1 / pond.simW, 1 / pond.simH)
-        property real damping: 0.975
+        // per step at 40 steps a second (fades like 0.975 per step did at 30)
+        property real damping: 0.981
+        property real steps: 1
         property real simAspect: pond.width / Math.max(1, pond.height)
         property vector4d drop0: Qt.vector4d(0, 0, 0, 0)
         property vector4d drop1: Qt.vector4d(0, 0, 0, 0)
@@ -159,24 +163,22 @@ Item {
         format: ShaderEffectSource.RGBA16F
         textureSize: Qt.size(pond.simW, pond.simH)
     }
-    // step the simulation at a steady 60Hz whatever the screen refresh rate is
-    Timer {
-        running: pond.ripples && pond.active
-        repeat: true
-        interval: 33
-        onTriggered: {
-            const z = Qt.vector4d(0, 0, 0, 0);
-            const due = [];
-            pond.pendingDrops = pond.pendingDrops.filter(p => {
-                if (p.at <= pond.t && due.length < 4) { due.push(p.v); return false; }
-                return true;
-            });
-            simStep.drop0 = due[0] ?? z;
-            simStep.drop1 = due[1] ?? z;
-            simStep.drop2 = due[2] ?? z;
-            simStep.drop3 = due[3] ?? z;
-            simSrc.scheduleUpdate();
-        }
+    // the ripples advance on the main frame timer, doing several steps per frame when the frame
+    // rate is low so they always move at about 40 steps a second
+    readonly property int simRate: 40
+    function stepSim() {
+        const z = Qt.vector4d(0, 0, 0, 0);
+        const due = [];
+        pond.pendingDrops = pond.pendingDrops.filter(p => {
+            if (p.at <= pond.t && due.length < 4) { due.push(p.v); return false; }
+            return true;
+        });
+        simStep.drop0 = due[0] ?? z;
+        simStep.drop1 = due[1] ?? z;
+        simStep.drop2 = due[2] ?? z;
+        simStep.drop3 = due[3] ?? z;
+        simStep.steps = Math.max(1, Math.min(3, Math.round(simRate / liveFps)));
+        simSrc.scheduleUpdate();
     }
     // the odd drip landing somewhere on the water
     Timer {
@@ -210,6 +212,8 @@ Item {
             const dt = last ? Math.min((now - last) / 1000, 0.1) : interval / 1000;
             last = now;
             cyberLayer.tick(dt);
+            hudLayer.step(dt);
+            if (pond.ripples) pond.stepSim();
             pond.t += dt;
             pond.mouseSpeed *= Math.pow(0.02, dt);
             for (let i = 0; i < fishRep.count; i++) fishRep.itemAt(i)?.step(dt);
@@ -666,6 +670,7 @@ Item {
         }
 
         Hud {
+            id: hudLayer
             anchors.fill: parent
             anchors.bottomMargin: pond.bottomInset
             visible: pond.hud

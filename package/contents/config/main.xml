@@ -20,6 +20,8 @@
     <entry name="SlowWhenUnfocused" type="Bool"><default>true</default></entry>
     <entry name="SlowOnBattery" type="Bool"><default>true</default></entry>
     <entry name="LowFrameRate" type="Int"><default>10</default></entry>
+    <!-- set in kscreenlockerrc: the lock screen hides every window, so ignore them there -->
+    <entry name="LockScreen" type="Bool"><default>false</default></entry>
     <entry name="FrameRate" type="Int"><default>20</default></entry>
   </group>
 </kcfg>
