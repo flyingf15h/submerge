@@ -43,7 +43,7 @@ screen too.
 Needs Plasma 6. Art by flyingf15h (CC BY-NC-SA 4.0), code GPLv3.
 Source: https://github.com/flyingf15h/submerge
 
-**Changelog (1.6):** Keeps swimming on battery when no windows are open, and the battery row shows how much time is left.
+**Changelog (1.6):** Hovering over a fish works again, it keeps swimming on battery when no windows are open, the battery row shows how much time is left, and it does less work per frame.
 
 **Changelog (1.3):** Ripples keep their speed at low frame rates, battery row in the HUD, lock and
 sign-in screen support.
