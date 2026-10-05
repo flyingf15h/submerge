@@ -1,8 +1,8 @@
 # KDE Store listing for Submerge
 
-Upload these as four separate items at https://store.kde.org (log in, then "Add Product").
-Upload the global theme last, so you can link the other three from it.
-Archives are in `dist/store/` after running `./build-dist.sh`. Screenshots are in `store/screenshots/`.
+Four items at https://store.kde.org (log in, then "Add Product"). Upload the global theme last so
+it can link to the other three. Files are in `dist/store/` after `./build-dist.sh`, screenshots in
+`store/screenshots/`.
 
 ---
 
@@ -11,31 +11,31 @@ Archives are in `dist/store/` after running `./build-dist.sh`. Screenshots are i
 - **Category:** Plasma 6 Add-Ons > Plasma 6 Wallpaper Plugins
 - **Title:** Submerge
 - **File:** `dist/store/submerge-wallpaper-1.3.tar.gz`
-- **License:** GPLv3 (artwork CC BY-NC-SA 4.0, mention in the description)
-- **Tags:** koi, fish, aquarium, water, animated, live wallpaper, cyberpunk, hud, dark, blue
-- **Summary:** A late night koi pond with a sci-fi tank monitor HUD
+- **License:** GPLv3
+- **Tags:** koi, fish, aquarium, water, animated, live wallpaper, hud, dark, blue
+- **Summary:** Koi swimming in a dark pond, with a HUD for your clock and system stats
 
 **Description:**
 
-Koi drift around a dark blue pond at night, lit from above with soft caustic light, while a tank
-monitor HUD keeps an eye on them and on your computer.
+Koi swimming around a dark pond at night, with a HUD that shows the time, CPU, GPU, memory,
+network, storage and battery.
 
-What's in it:
+The fish are hand painted and swim the way koi do, in short bursts and long glides. Ripples come
+from a small water simulation, so drips and fish coming up to the surface leave real rings. Hover
+over a fish and a specimen box locks onto it.
 
-- Hand drawn koi that swim in bursts and glides and bend into their turns
-- Real ripples from a small water simulation, from drips, rising fish and your cursor
-- Two or three big blurry koi drifting past the glass with a slight glitch
-- A HUD with a big clock and live CPU, GPU, memory, network and storage readouts, including which app is using the most CPU and memory
-- A specimen box that locks onto whichever fish is closest to your cursor, with its koi variety, heading and depth
-- Tank conditions (temperature, pH, oxygen, flow) that change every time you boot, and change which koi varieties show up the most
+The tank's temperature, pH and oxygen change every time you boot, and they decide which koi
+varieties show up most.
 
-Everything can be turned off or tuned in the wallpaper settings: number of fish, size, speed, text size, title, user name, ripples, light, grain and the HUD.
+It runs at 20 fps, drops to 10 while you're in a window or on battery, and stops when a maximized
+window covers it. Every effect can be turned off in the wallpaper settings. Works on the lock
+screen too.
 
-Needs Plasma 6. For the full look, also grab the Submerge global theme, Plasma style and colour scheme.
+Needs Plasma 6. Art by flyingf15h (CC BY-NC-SA 4.0), code GPLv3.
+Source: https://github.com/flyingf15h/submerge
 
-Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: https://github.com/flyingf15h/submerge
-
-**Changelog (1.2):** Much lighter on CPU and battery: capped frame rate, slows down while you use a window or run on battery, pauses when a maximized window covers it. The HUD now sits above the taskbar, and the panel is see-through glass.
+**Changelog (1.3):** Ripples keep their speed at low frame rates, battery row in the HUD, lock and
+sign-in screen support.
 
 ---
 
@@ -45,19 +45,17 @@ Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3. Source: htt
 - **Title:** Submerge
 - **File:** `dist/store/submerge-plasma-style-1.3.tar.gz`
 - **License:** GPLv3
-- **Tags:** dark, blue, navy, cyberpunk, hud, panel, taskbar
-- **Summary:** Navy glass panel with a glowing edge, made for the Submerge wallpaper
+- **Tags:** dark, blue, navy, glass, panel, taskbar
+- **Summary:** Dark glass panel with a glowing edge
 
 **Description:**
 
-A dark navy panel with a thin glowing top edge and small corner brackets. The focused app gets a
-blue glow and a bright line under it, other open apps get a dim line, and apps asking for your
-attention light up orange. Everything else uses the default Plasma style, coloured with the
-Submerge colour scheme.
+A see-through navy panel with a thin glowing top edge. The app you're using gets a bright blue
+line under it, other open apps get a dim one, and anything asking for attention turns orange.
 
-Made to go with the Submerge wallpaper, but it works fine on its own.
+Made for the Submerge wallpaper, but it works fine on its own.
 
-**Changelog (1.2):** Much lighter on CPU and battery: capped frame rate, slows down while you use a window or run on battery, pauses when a maximized window covers it. The HUD now sits above the taskbar, and the panel is see-through glass.
+**Changelog (1.3):** The panel is now see-through glass.
 
 ---
 
@@ -67,15 +65,15 @@ Made to go with the Submerge wallpaper, but it works fine on its own.
 - **Title:** Submerge
 - **File:** `dist/store/Submerge.colors`
 - **License:** GPLv3
-- **Tags:** dark, blue, navy, orange, cyberpunk
-- **Summary:** Deep navy with electric blue highlights and orange accents
+- **Tags:** dark, blue, navy, orange
+- **Summary:** Deep navy with electric blue highlights
 
 **Description:**
 
-Deep navy windows, pale blue text, electric blue selections and warm orange for links you've
-visited and things that need attention. Made for the Submerge wallpaper.
+Deep navy windows, pale blue text and electric blue selections, with orange for warnings and
+visited links. Matches the Submerge wallpaper.
 
-**Changelog (1.2):** Much lighter on CPU and battery: capped frame rate, slows down while you use a window or run on battery, pauses when a maximized window covers it. The HUD now sits above the taskbar, and the panel is see-through glass.
+**Changelog (1.3):** First release.
 
 ---
 
@@ -83,26 +81,25 @@ visited and things that need attention. Made for the Submerge wallpaper.
 
 - **Category:** Plasma 6 Add-Ons > Global Themes (Plasma 6)
 - **Title:** Submerge
-- **File:** `dist/store/submerge-global-theme-1.3.tar.gz`
+- **File:** `dist/store/submerge-global-theme-1.3.tar.gz` (also attach `dist/submerge-1.3.tar.gz`)
 - **License:** GPLv3
-- **Tags:** koi, fish, aquarium, dark, blue, cyberpunk, hud, animated
-- **Summary:** A late night koi pond desktop, styled like an old game loading screen
+- **Tags:** koi, fish, aquarium, dark, blue, hud, animated
+- **Summary:** A night koi pond desktop, styled like an old game loading screen
 
 **Description:**
 
-Turns your desktop into a late night aquarium. Applies the Submerge wallpaper, Plasma style,
-colour scheme and a matching splash screen in one go.
+Sets up the whole Submerge look at once: the koi pond wallpaper, the glass panel, the colour
+scheme and a matching splash screen.
 
-This theme uses three other items, so install those first (or use the all-in-one download on GitHub):
+Install these first, or applying the theme won't find them:
+- Wallpaper: (paste link)
+- Plasma style: (paste link)
+- Colour scheme: (paste link)
 
-- Submerge wallpaper: (paste its store link here)
-- Submerge Plasma style: (paste its store link here)
-- Submerge colour scheme: (paste its store link here)
+Or download submerge-1.3.tar.gz from this page and run ./install.sh --apply, which installs
+everything in one go. The download also has an optional sign-in screen.
 
-Tick "Desktop and window layout" when applying it if you want the wallpaper switched for you.
+Art by flyingf15h (CC BY-NC-SA 4.0), code GPLv3.
+Source: https://github.com/flyingf15h/submerge
 
-All-in-one download with an install script: https://github.com/flyingf15h/submerge/releases
-
-Fish artwork by flyingf15h, licensed CC BY-NC-SA 4.0. Code is GPLv3.
-
-**Changelog (1.2):** Much lighter on CPU and battery: capped frame rate, slows down while you use a window or run on battery, pauses when a maximized window covers it. The HUD now sits above the taskbar, and the panel is see-through glass.
+**Changelog (1.3):** First release on the store.
