@@ -21,11 +21,11 @@ From the KDE Store: [global theme](https://store.kde.org/p/2377260/),
 [colour scheme](https://store.kde.org/p/2377259/). Or the all-in-one download:
 
 
-Grab `submerge-1.5.tar.gz` from [Releases](../../releases), then:
+Grab `submerge-1.6.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.5.tar.gz
-cd submerge-1.5
+tar xzf submerge-1.6.tar.gz
+cd submerge-1.6
 ./install.sh --apply
 ```
 
@@ -57,7 +57,7 @@ For the sign-in screen (SDDM), the release has an `sddm` folder with Breeze's lo
 the pond. It installs system-wide, so it needs sudo:
 
 ```sh
-cd submerge-1.5/sddm
+cd submerge-1.6/sddm
 sudo ./install.sh            # undo with: sudo ./install.sh --remove
 ```
 

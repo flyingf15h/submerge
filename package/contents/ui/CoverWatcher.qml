@@ -8,9 +8,12 @@ import org.kde.plasma.workspace.dbus as DBus
 //  - covered: a maximized or fullscreen window hides the desktop (unless the desktop has focus,
 //    which is what clicking it or Show Desktop does)
 //  - focused: the desktop itself is the active window
+//  - hasWindows: something is open on this desktop
 Item {
     id: watcher
     property bool covered: false
+    // any window open (not minimized) on this desktop
+    readonly property bool hasWindows: tasks.count > 0
     // Show Desktop only hands the desktop focus for a moment, so ask KWin about it directly
     property bool showingDesktop: false
     readonly property bool focused: Window.active || showingDesktop

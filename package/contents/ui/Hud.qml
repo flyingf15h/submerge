@@ -50,7 +50,15 @@ Item {
     readonly property string batteryState: {
         const st = battery["State"], ac = (power.data["AC Adapter"] || {})["Plugged in"];
         return st === "Charging" ? "CHARGING" : st === "FullyCharged" ? "FULLY CHARGED"
-             : ac ? "ON AC POWER" : "ON BATTERY";
+             : ac ? "ON AC POWER" : batteryLeft ? batteryLeft + " LEFT" : "ON BATTERY";
+    }
+    // powerdevil's estimate of time to empty at the current draw (smoothed so it doesn't jump
+    // around with every spike); 0 until it has enough samples
+    readonly property real remainingMs: battery["Smoothed Remaining msec"] || battery["Remaining msec"] || 0
+    readonly property string batteryLeft: {
+        if (remainingMs <= 0) return "";
+        const m = Math.round(remainingMs / 60000), h = Math.floor(m / 60);
+        return h > 0 ? h + "H " + String(m % 60).padStart(2, "0") + "M" : m + "M";
     }
     readonly property color good: "#5fe08f"
     readonly property color low: "#ff4d5e"

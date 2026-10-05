@@ -19,7 +19,7 @@ it can link to the other three. Files are in `dist/store/` after `./build-dist.s
 
 - **Category:** Plasma 6 Add-Ons > Plasma 6 Wallpaper Plugins
 - **Title:** Submerge
-- **File:** `dist/store/submerge-wallpaper-1.5.tar.gz`
+- **File:** `dist/store/submerge-wallpaper-1.6.tar.gz`
 - **License:** GPLv3
 - **Tags:** koi, fish, aquarium, water, animated, live wallpaper, hud, dark, blue
 - **Summary:** Koi swimming in a dark pond, with a HUD for your clock and system stats
@@ -37,13 +37,13 @@ The tank's temperature, pH and oxygen change every time you boot, and they decid
 varieties show up most.
 
 It runs at 20 fps, drops to 10 while you're in a window, stops when a maximized window covers
-it, and holds a still frame on battery so it never costs extra power. Every effect can be turned off in the wallpaper settings. Works on the lock
+it, and holds a still frame on battery while you use a window so it costs no extra power. Every effect can be turned off in the wallpaper settings. Works on the lock
 screen too.
 
 Needs Plasma 6. Art by flyingf15h (CC BY-NC-SA 4.0), code GPLv3.
 Source: https://github.com/flyingf15h/submerge
 
-**Changelog (1.5):** Holds a still frame whenever the laptop is unplugged, so it uses no extra battery.
+**Changelog (1.6):** Keeps swimming on battery when no windows are open, and the battery row shows how much time is left.
 
 **Changelog (1.3):** Ripples keep their speed at low frame rates, battery row in the HUD, lock and
 sign-in screen support.
@@ -54,7 +54,7 @@ sign-in screen support.
 
 - **Category:** Plasma 6 Add-Ons > Plasma Themes
 - **Title:** Submerge
-- **File:** `dist/store/submerge-plasma-style-1.5.tar.gz`
+- **File:** `dist/store/submerge-plasma-style-1.6.tar.gz`
 - **License:** GPLv3
 - **Tags:** dark, blue, navy, glass, panel, taskbar
 - **Summary:** Dark glass panel with a glowing edge
@@ -92,7 +92,7 @@ visited links. Matches the Submerge wallpaper.
 
 - **Category:** Plasma 6 Add-Ons > Global Themes (Plasma 6)
 - **Title:** Submerge
-- **File:** `dist/store/submerge-global-theme-1.5.tar.gz` (also attach `dist/submerge-1.5.tar.gz`)
+- **File:** `dist/store/submerge-global-theme-1.6.tar.gz` (also attach `dist/submerge-1.6.tar.gz`)
 - **License:** GPLv3
 - **Tags:** koi, fish, aquarium, dark, blue, hud, animated
 - **Summary:** A night koi pond desktop, styled like an old game loading screen
@@ -107,7 +107,7 @@ Install these first, or applying the theme won't find them:
 - Plasma style: https://store.kde.org/p/2377258/
 - Colour scheme: https://store.kde.org/p/2377259/
 
-Or download submerge-1.5.tar.gz from this page and run ./install.sh --apply, which installs
+Or download submerge-1.6.tar.gz from this page and run ./install.sh --apply, which installs
 everything in one go. The download also has an optional sign-in screen.
 
 Art by flyingf15h (CC BY-NC-SA 4.0), code GPLv3.

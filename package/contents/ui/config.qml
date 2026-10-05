@@ -34,7 +34,7 @@ Kirigami.FormLayout {
     QQC2.CheckBox { id: pauseCovered; Kirigami.FormData.label: "Performance:"; text: "Pause when a maximized window covers the desktop" }
     QQC2.CheckBox { id: slowUnfocused; text: "Lower frame rate while you're using a window" }
     QQC2.CheckBox { id: slowBattery; text: "Lower frame rate on battery" }
-    QQC2.CheckBox { id: freezeBattery; text: "Hold a still frame while on battery (uses no extra power)" }
+    QQC2.CheckBox { id: freezeBattery; text: "On battery, hold a still frame while a window is in use" }
     QQC2.SpinBox { id: frameRate; Kirigami.FormData.label: "Frame rate (fps):"; from: 5; to: 60; stepSize: 5 }
     QQC2.SpinBox { id: lowFrameRate; Kirigami.FormData.label: "Lower frame rate (fps):"; from: 2; to: 30; stepSize: 2 }
     QQC2.CheckBox { id: film; Kirigami.FormData.label: "Effects:"; text: "Film look (grain, colour fringing)" }
