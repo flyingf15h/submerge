@@ -4,6 +4,10 @@ A late night koi pond for KDE Plasma 6, styled like an old game loading screen.
 
 ![Submerge](store/screenshots/submerge-1.jpg)
 
+Demo videos: [the wallpaper](store/demo/submerge-wallpaper.mp4) (the specimen box following the
+cursor) and [the global theme](store/demo/submerge-global-theme.mp4) (panel, launcher, colour
+scheme and splash screen).
+
 - **Live wallpaper**: koi that swim in bursts and glides and bend into their turns, real
   ripples from a small water simulation, caustic light along the top, and two or three big
   blurry glitching koi drifting past the glass.
