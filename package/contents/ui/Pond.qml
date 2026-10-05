@@ -50,10 +50,10 @@ Item {
                                       && !!power.data["AC Adapter"] && power.data["AC Adapter"]["Plugged in"] === false
 
     // Stop completely when the pond can't be seen at all (a maximized or fullscreen window covers
-    // it), and on battery whenever you're working in a window: every animated frame makes the
-    // compositor redraw the whole screen, which costs real battery even at a low frame rate.
-    // Otherwise, while you're in a window, it keeps swimming at a lower frame rate.
-    readonly property bool batteryHold: freezeOnBattery && onBattery && unfocused && !lockScreen
+    // it), and whenever the laptop is unplugged: every animated frame makes the compositor redraw
+    // the whole screen, which costs real battery even at a low frame rate. On battery it shows a
+    // still frame. Otherwise, while you're in a window, it keeps swimming at a lower frame rate.
+    readonly property bool batteryHold: freezeOnBattery && onBattery
     readonly property bool active: running && visible && !covered && !batteryHold
     readonly property bool lowPower: (slowWhenUnfocused && unfocused && !lockScreen) || (slowOnBattery && onBattery)
     readonly property real liveFps: lowPower ? Math.min(fps, lowFps) : fps

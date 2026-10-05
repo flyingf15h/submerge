@@ -112,7 +112,7 @@ def main():
     with open(os.path.join(OUT, "plasmarc"), "w") as f:
         f.write("[ContrastEffect]\nenabled=true\ncontrast=0.8\nintensity=1.0\nsaturation=1.5\n\n[AdaptiveTransparency]\nenabled=true\n")
     meta = {"KPlugin": {"Id": "submerge", "Name": "Submerge", "Description": "Night-aquarium panel to match the Submerge wallpaper",
-                        "Authors": [{"Name": "flyingf15h"}], "License": "GPL-3.0-or-later", "Version": "1.4", "EnabledByDefault": True},
+                        "Authors": [{"Name": "flyingf15h"}], "License": "GPL-3.0-or-later", "Version": "1.5", "EnabledByDefault": True},
             "X-Plasma-API": "5.0"}
     with open(os.path.join(OUT, "metadata.json"), "w") as f:
         json.dump(meta, f, indent=4)

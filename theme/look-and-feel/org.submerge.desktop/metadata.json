@@ -11,7 +11,7 @@
         "Id": "org.submerge.desktop",
         "License": "GPL-3.0-or-later",
         "Name": "Submerge",
-        "Version": "1.4",
+        "Version": "1.5",
         "Website": "https://github.com/flyingf15h/submerge"
     },
     "X-Plasma-APIVersion": "2"
