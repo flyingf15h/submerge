@@ -16,11 +16,11 @@ A late night koi pond for KDE Plasma 6, styled like an old game loading screen.
 
 ## Install
 
-Grab `submerge-1.1.tar.gz` from [Releases](../../releases), then:
+Grab `submerge-1.2.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.1.tar.gz
-cd submerge-1.1
+tar xzf submerge-1.2.tar.gz
+cd submerge-1.2
 ./install.sh --apply
 ```
 

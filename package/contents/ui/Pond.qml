@@ -27,25 +27,31 @@ Item {
     property real textScale: 1.0
     property bool running: true
     property bool pauseWhenCovered: true
-    property bool pauseWhenUnfocused: true
-    property bool pauseOnBattery: true
+    property bool slowWhenUnfocused: true
+    property bool slowOnBattery: true
     property int fps: 20
+    property int lowFps: 10
+    // room taken by a panel along the bottom of the screen, so the HUD sits above the taskbar
+    property real bottomInset: 0
     Loader { id: coverLoader; source: "CoverWatcher.qml" }
     readonly property bool watcherReady: coverLoader.item !== null
     readonly property bool covered: pauseWhenCovered && watcherReady && coverLoader.item.covered
-    readonly property bool unfocused: pauseWhenUnfocused && watcherReady && !coverLoader.item.focused
+    readonly property bool unfocused: watcherReady && !coverLoader.item.focused
 
     P5Support.DataSource {
         id: power
         engine: "powermanagement"
-        connectedSources: pond.pauseOnBattery ? ["AC Adapter", "Battery"] : []
+        connectedSources: pond.slowOnBattery ? ["AC Adapter", "Battery"] : []
     }
-    readonly property bool onBattery: pauseOnBattery && !!power.data["Battery"] && !!power.data["Battery"]["Has Battery"]
+    readonly property bool onBattery: !!power.data["Battery"] && !!power.data["Battery"]["Has Battery"]
                                       && !!power.data["AC Adapter"] && power.data["AC Adapter"]["Plugged in"] === false
 
-    // nothing moves (and nothing redraws) while you're using a window, a maximized or fullscreen
-    // window hides the desktop, or the laptop is on battery
-    readonly property bool active: running && visible && !covered && !unfocused && !onBattery
+    // Only stop completely when the pond can't be seen at all (a maximized or fullscreen window
+    // covers it). While you're working in a window, or on battery, it keeps swimming at a lower
+    // frame rate instead of freezing.
+    readonly property bool active: running && visible && !covered
+    readonly property bool lowPower: (slowWhenUnfocused && unfocused) || (slowOnBattery && onBattery)
+    readonly property real liveFps: lowPower ? Math.min(fps, lowFps) : fps
 
     readonly property url img: Qt.resolvedUrl("../images/")
     readonly property url shaders: Qt.resolvedUrl("../shaders/")
@@ -193,7 +199,7 @@ Item {
     // A steady, capped frame rate: on a 120 Hz screen per-vsync animation would redraw the
     // whole 5-megapixel scene 120 times a second for fish that barely move between frames.
     Timer {
-        interval: Math.round(1000 / pond.fps)
+        interval: Math.round(1000 / pond.liveFps)
         repeat: true
         running: pond.active
         property real last: 0
@@ -648,6 +654,7 @@ Item {
         Cyber {
             id: cyberLayer
             anchors.fill: parent
+            anchors.bottomMargin: pond.bottomInset
             visible: pond.hud
             fishItems: fishRep
             fgItems: fgRep
@@ -660,6 +667,7 @@ Item {
 
         Hud {
             anchors.fill: parent
+            anchors.bottomMargin: pond.bottomInset
             visible: pond.hud
             title: pond.title
             player: pond.player

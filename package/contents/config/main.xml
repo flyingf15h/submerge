@@ -17,8 +17,9 @@
     <entry name="Player" type="String"><default>GUEST</default></entry>
     <entry name="TextScale" type="Int"><default>100</default></entry>
     <entry name="PauseWhenCovered" type="Bool"><default>true</default></entry>
-    <entry name="PauseWhenUnfocused" type="Bool"><default>true</default></entry>
-    <entry name="PauseOnBattery" type="Bool"><default>true</default></entry>
+    <entry name="SlowWhenUnfocused" type="Bool"><default>true</default></entry>
+    <entry name="SlowOnBattery" type="Bool"><default>true</default></entry>
+    <entry name="LowFrameRate" type="Int"><default>10</default></entry>
     <entry name="FrameRate" type="Int"><default>20</default></entry>
   </group>
 </kcfg>

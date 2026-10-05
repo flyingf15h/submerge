@@ -19,9 +19,12 @@ WallpaperItem {
         player: root.configuration.Player
         textScale: root.configuration.TextScale / 100
         running: root.visible
+        // the part of the screen not taken by panels, so the HUD clears the taskbar
+        bottomInset: Math.max(0, root.height - (Plasmoid.availableScreenRect.y + Plasmoid.availableScreenRect.height))
         pauseWhenCovered: root.configuration.PauseWhenCovered
-        pauseWhenUnfocused: root.configuration.PauseWhenUnfocused
-        pauseOnBattery: root.configuration.PauseOnBattery
+        slowWhenUnfocused: root.configuration.SlowWhenUnfocused
+        slowOnBattery: root.configuration.SlowOnBattery
+        lowFps: root.configuration.LowFrameRate
         fps: root.configuration.FrameRate
     }
 }

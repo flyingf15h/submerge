@@ -16,8 +16,9 @@ Kirigami.FormLayout {
     property alias cfg_Player: player.text
     property alias cfg_TextScale: textScale.value
     property alias cfg_PauseWhenCovered: pauseCovered.checked
-    property alias cfg_PauseWhenUnfocused: pauseUnfocused.checked
-    property alias cfg_PauseOnBattery: pauseBattery.checked
+    property alias cfg_SlowWhenUnfocused: slowUnfocused.checked
+    property alias cfg_SlowOnBattery: slowBattery.checked
+    property alias cfg_LowFrameRate: lowFrameRate.value
     property alias cfg_FrameRate: frameRate.value
 
     QQC2.SpinBox { id: fishCount; Kirigami.FormData.label: "Fish:"; from: 1; to: 40 }
@@ -29,10 +30,11 @@ Kirigami.FormLayout {
     QQC2.TextField { id: player; Kirigami.FormData.label: "User name:"; enabled: hud.checked }
     QQC2.SpinBox { id: textScale; Kirigami.FormData.label: "Text size (%):"; from: 60; to: 200; stepSize: 10; enabled: hud.checked }
 
-    QQC2.CheckBox { id: pauseUnfocused; Kirigami.FormData.label: "Performance:"; text: "Only animate while the desktop is focused (click it or Show Desktop)" }
-    QQC2.CheckBox { id: pauseCovered; text: "Pause when a maximized window covers the desktop" }
-    QQC2.CheckBox { id: pauseBattery; text: "Hold a still frame on battery" }
+    QQC2.CheckBox { id: pauseCovered; Kirigami.FormData.label: "Performance:"; text: "Pause when a maximized window covers the desktop" }
+    QQC2.CheckBox { id: slowUnfocused; text: "Lower frame rate while you're using a window" }
+    QQC2.CheckBox { id: slowBattery; text: "Lower frame rate on battery" }
     QQC2.SpinBox { id: frameRate; Kirigami.FormData.label: "Frame rate (fps):"; from: 5; to: 60; stepSize: 5 }
+    QQC2.SpinBox { id: lowFrameRate; Kirigami.FormData.label: "Lower frame rate (fps):"; from: 2; to: 30; stepSize: 2 }
     QQC2.CheckBox { id: film; Kirigami.FormData.label: "Effects:"; text: "Film look (grain, colour fringing)" }
     QQC2.CheckBox { id: foreground; text: "Blurry goldfish close to the glass" }
     QQC2.CheckBox { id: lights; text: "Drifting tank lights" }
