@@ -6,6 +6,8 @@ splash screen.
 
 ![Submerge](store/screenshots/submerge-1.jpg)
 
+![Submerge running with the taskbar](store/demo/submerge-preview.webp)
+
 Videos: [the wallpaper](store/demo/submerge-wallpaper.mp4) and [the whole theme](store/demo/submerge-global-theme.mp4).
 
 ## What's in it
