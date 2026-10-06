@@ -5,6 +5,9 @@ Published 2026-10-05 under flyingf15h:
 - Plasma style: https://store.kde.org/p/2377258/
 - Colour scheme: https://store.kde.org/p/2377259/
 - Global theme: https://store.kde.org/p/2377260/
+- Plasma 5 wallpaper (from the plasma5 branch): https://store.kde.org/p/2377369/
+- Plasma 5 global theme: https://store.kde.org/p/2377371/
+- The Plasma 5 panel style is the -plasma5 file on the Plasma style page, tagged Plasma 5.
 
 To ship an update, edit each product (Products > Edit), bump the version, upload the new file on
 the Files step and add a changelog entry.
