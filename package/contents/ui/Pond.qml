@@ -681,6 +681,7 @@ Item {
             textScale: pond.textScale
             paused: !pond.active
             lowPower: pond.lowPower
+            lockScreen: pond.lockScreen
             t: pond.t
             mouseX: pond.mouseX
             mouseY: pond.mouseY

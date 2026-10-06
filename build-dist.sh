@@ -45,6 +45,10 @@ if [ "${1:-}" = "--apply" ]; then
     plasma-apply-lookandfeel -a org.submerge.desktop
     plasma-apply-desktoptheme submerge
     plasma-apply-colorscheme Submerge
+    # the pond on the lock screen too, with its own centred clock in place of Plasma's
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin org.submerge.wallpaper
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.submerge.wallpaper --group General --key LockScreen true
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key alwaysShowClock false
     echo "Applied. If the wallpaper doesn't switch, pick 'Submerge' under Desktop Wallpaper settings."
 else
     echo "Apply it in System Settings > Colours & Themes > Global Theme > Submerge,"

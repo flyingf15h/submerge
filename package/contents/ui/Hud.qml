@@ -18,6 +18,9 @@ Item {
     property bool paused: false
     // at the lower frame rate the readouts don't need to be as fresh either
     property bool lowPower: false
+    // the lock screen draws its own unlock prompt in the middle, so the HUD moves to a centred
+    // layout above and below it instead of the left column
+    property bool lockScreen: false
     readonly property int slow: paused ? 60000 : lowPower ? 5000 : 1
 
     readonly property real u: height / 1080 * textScale
@@ -149,6 +152,7 @@ Item {
 
     // soft dark backing for the left column, like the gradient behind a game menu
     Rectangle {
+        visible: !hud.lockScreen
         x: 0; y: 0
         width: 560 * hud.u; height: hud.height
         gradient: Gradient {
@@ -159,6 +163,7 @@ Item {
     }
 
     Column {
+        visible: !hud.lockScreen
         x: 72 * hud.u
         y: 64 * hud.u
         spacing: 0
@@ -298,6 +303,7 @@ Item {
 
     // bottom left: overall status, barcode and a core temperature gauge
     Column {
+        visible: !hud.lockScreen
         x: 72 * hud.u
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 64 * hud.u
@@ -347,6 +353,7 @@ Item {
 
     // bottom right: who's logged in and what's running
     Column {
+        visible: !hud.lockScreen
         anchors.right: parent.right
         anchors.rightMargin: 72 * hud.u
         anchors.bottom: parent.bottom
@@ -363,6 +370,104 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 color: hud.ink
                 opacity: Math.sin(hud.t * 3) > 0 ? 0.95 : 0.2
+            }
+        }
+    }
+
+    // ---- lock screen: centred title and clock up top, a strip of readouts along the bottom ----
+    Column {
+        visible: hud.lockScreen
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: hud.height * 0.08
+        spacing: 0
+
+        Mono {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "// " + (host.value || "localhost").toString().toUpperCase() + "   ·   SESSION LOCKED"
+            font.pixelSize: 11 * hud.u
+            font.letterSpacing: 4 * hud.u
+            leftPadding: font.letterSpacing
+            opacity: 0.9
+        }
+        Item { width: 1; height: 16 * hud.u }
+        Item {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: lockTitle.width
+            height: lockTitle.height * 1.45
+            Text {
+                id: lockTitle
+                text: hud.title
+                color: hud.ink
+                font.family: hud.cond
+                font.weight: Font.Light
+                font.pixelSize: 40 * hud.u
+                font.letterSpacing: 22 * hud.u
+                leftPadding: font.letterSpacing
+                transform: Scale { yScale: 1.45 }
+            }
+        }
+        Item { width: 1; height: 4 * hud.u }
+        // the clock sits between two thin rules, like a readout on a gauge
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 26 * hud.u
+            Rectangle { width: 110 * hud.u; height: Math.max(1, hud.u); color: hud.line; opacity: 0.6; anchors.verticalCenter: parent.verticalCenter }
+            Text {
+                text: Qt.formatDateTime(hud.now, "HH:mm")
+                color: hud.ink
+                font.family: hud.cond
+                font.weight: Font.ExtraLight
+                font.pixelSize: 128 * hud.u
+                font.letterSpacing: 8 * hud.u
+                leftPadding: font.letterSpacing
+            }
+            Rectangle { width: 110 * hud.u; height: Math.max(1, hud.u); color: hud.line; opacity: 0.6; anchors.verticalCenter: parent.verticalCenter }
+        }
+        Mono {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: Qt.formatDateTime(hud.now, "dddd dd MMMM").toUpperCase() + (hud.paused ? "" : "   ·   :" + Qt.formatDateTime(hud.now, "ss"))
+            font.pixelSize: 12 * hud.u
+            font.letterSpacing: 6 * hud.u
+            leftPadding: font.letterSpacing
+            opacity: 0.95
+        }
+    }
+
+    Row {
+        visible: hud.lockScreen
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 150 * hud.u
+        spacing: 40 * hud.u
+        Repeater {
+            model: [
+                { k: "CPU",  v: () => Math.round(hud.pct(cpu.value)) + "%", f: () => hud.pct(cpu.value) / 100 },
+                { k: "MEM",  v: () => Math.round(hud.pct(mem.value)) + "%", f: () => hud.pct(mem.value) / 100 },
+                { k: "NET",  v: () => "↓ " + hud.rate(down.value), f: () => Math.min(1, (down.value || 0) / 5242880) }
+            ].concat(hud.hasBattery ? [
+                { k: "BATTERY", v: () => Math.round(hud.batteryPct) + "%" + (hud.batteryLeft && hud.batteryState.endsWith("LEFT") ? "  ·  " + hud.batteryLeft : ""),
+                  f: () => hud.batteryPct / 100, battery: true }
+            ] : [])
+            Column {
+                required property var modelData
+                spacing: 5 * hud.u
+                width: Math.max(120 * hud.u, cellValue.implicitWidth)
+                Mono { text: "// " + modelData.k; font.pixelSize: 9 * hud.u; opacity: 0.8 }
+                Mono {
+                    id: cellValue
+                    text: { cpu.value; mem.value; down.value; hud.batteryPct; hud.batteryLeft; return modelData.v(); }
+                    font.pixelSize: 14 * hud.u
+                    color: modelData.battery ? hud.batteryColor : hud.ink
+                }
+                Item {
+                    width: parent.width; height: Math.max(2, 2 * hud.u)
+                    Rectangle { anchors.fill: parent; color: hud.line; opacity: 0.3 }
+                    Rectangle {
+                        width: parent.width * Math.max(0, Math.min(1, (cpu.value, mem.value, down.value, hud.batteryPct, modelData.f())))
+                        height: parent.height
+                        color: modelData.battery ? hud.batteryColor : hud.line
+                    }
+                }
             }
         }
     }

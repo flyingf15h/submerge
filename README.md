@@ -55,7 +55,12 @@ Screen Locking > Appearance, or run:
 ```sh
 kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin org.submerge.wallpaper
 kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.submerge.wallpaper --group General --key LockScreen true
+kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key alwaysShowClock false
 ```
+
+On the lock screen the HUD moves to a centred layout with its own clock, so the last line turns
+off Plasma's clock to avoid showing the time twice (same as Screen Locking > Configure >
+Show clock: Never).
 
 For the sign-in screen (SDDM), the release has an `sddm` folder with Breeze's login form over
 the pond. It installs system-wide, so it needs sudo:
