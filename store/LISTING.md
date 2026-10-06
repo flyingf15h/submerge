@@ -11,7 +11,7 @@ the Files step and add a changelog entry.
 
 Four items at https://store.kde.org (log in, then "Add Product"). Upload the global theme last so
 it can link to the other three. Files are in `dist/store/` after `./build-dist.sh`, screenshots in
-`store/screenshots/` (`submerge-preview.gif` is the animated one for the gallery).
+`store/screenshots/` (gallery order: `submerge-preview.gif`, `submerge-1.jpg`, `submerge-lockscreen.jpg`; the store caps pictures at 5MB).
 
 ---
 
