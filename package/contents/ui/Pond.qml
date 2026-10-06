@@ -748,28 +748,33 @@ Item {
 
     // The desktop's icon view sits on top of the wallpaper and takes the hover events, so a
     // MouseArea in here never sees the cursor. A non-blocking HoverHandler on the window's root
-    // item still gets them, whatever is in between.
-    HoverHandler {
-        id: cursor
-        blocking: false
-        property real lx: 0
-        property real ly: 0
-        property real lt: 0
-        Component.onCompleted: {
-            let top = pond;
-            while (top.parent) top = top.parent;
-            parent = top;
+    // item still gets them, whatever is in between. It's created on the root item and destroyed
+    // with the pond, so it doesn't outlive the wallpaper when Plasma swaps or reloads it.
+    property var cursorHandler: null
+    Component.onCompleted: {
+        let top = pond;
+        while (top.parent) top = top.parent;
+        cursorHandler = cursorComponent.createObject(top);
+    }
+    Component.onDestruction: if (cursorHandler) cursorHandler.destroy()
+    Component {
+        id: cursorComponent
+        HoverHandler {
+            blocking: false
+            property real lx: 0
+            property real ly: 0
+            property real lt: 0
+            onPointChanged: {
+                if (!pond.active) return;
+                const p = pond.mapFromItem(null, point.scenePosition.x, point.scenePosition.y);
+                if (p.x < 0 || p.y < 0 || p.x > pond.width || p.y > pond.height) { pond.mouseX = pond.mouseY = -9999; return; }
+                const now = Date.now();
+                const v = Math.sqrt((p.x - lx) ** 2 + (p.y - ly) ** 2) / (Math.max(1, now - lt) / 1000);
+                if (v > 700 && now - lt < 200 && Math.random() < 0.12) pond.drop(p.x, p.y, 0.008, 0.07);
+                lx = p.x; ly = p.y; lt = now;
+                pond.mouseX = p.x; pond.mouseY = p.y;
+            }
+            onHoveredChanged: if (!hovered) { pond.mouseX = -9999; pond.mouseY = -9999; }
         }
-        onPointChanged: {
-            if (!pond.active) return;
-            const p = pond.mapFromItem(null, point.scenePosition.x, point.scenePosition.y);
-            if (p.x < 0 || p.y < 0 || p.x > pond.width || p.y > pond.height) { pond.mouseX = pond.mouseY = -9999; return; }
-            const now = Date.now();
-            const v = Math.sqrt((p.x - lx) ** 2 + (p.y - ly) ** 2) / (Math.max(1, now - lt) / 1000);
-            if (v > 700 && now - lt < 200 && Math.random() < 0.12) pond.drop(p.x, p.y, 0.008, 0.07);
-            lx = p.x; ly = p.y; lt = now;
-            pond.mouseX = p.x; pond.mouseY = p.y;
-        }
-        onHoveredChanged: if (!hovered) { pond.mouseX = -9999; pond.mouseY = -9999; }
     }
 }

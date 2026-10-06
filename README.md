@@ -25,11 +25,11 @@ Videos: [the wallpaper](store/demo/submerge-wallpaper.mp4) and [the whole theme]
 
 From the KDE Store: [global theme](https://store.kde.org/p/2377260/),
 [wallpaper](https://store.kde.org/p/2377252/), [panel style](https://store.kde.org/p/2377258/),
-[colour scheme](https://store.kde.org/p/2377259/). Or grab `submerge-1.6.tar.gz` from [Releases](../../releases), then:
+[colour scheme](https://store.kde.org/p/2377259/). Or grab `submerge-1.7.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.6.tar.gz
-cd submerge-1.6
+tar xzf submerge-1.7.tar.gz
+cd submerge-1.7
 ./install.sh --apply
 ```
 
@@ -55,18 +55,19 @@ Screen Locking > Appearance, or run:
 ```sh
 kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin org.submerge.wallpaper
 kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.submerge.wallpaper --group General --key LockScreen true
-kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key alwaysShowClock false
+kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key hideClockWhenIdle true
 ```
 
-On the lock screen the HUD moves to a centred layout with its own clock, so the last line turns
-off Plasma's clock to avoid showing the time twice (same as Screen Locking > Configure >
-Show clock: Never).
+On the lock screen the HUD moves to a centred layout with its own clock. The last line makes
+Plasma's clock show up only while you're typing your password, when the pond behind it is
+blurred, so the time never shows twice (same as Screen Locking > Configure > Show clock: On
+unlocking prompt).
 
 For the sign-in screen (SDDM), the release has an `sddm` folder with Breeze's login form over
 the pond. It installs system-wide, so it needs sudo:
 
 ```sh
-cd submerge-1.6/sddm
+cd submerge-1.7/sddm
 sudo ./install.sh            # undo with: sudo ./install.sh --remove
 ```
 

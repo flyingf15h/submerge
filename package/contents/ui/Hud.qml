@@ -76,13 +76,14 @@ Item {
     }
 
     // ---- live system sensors ----
+    // (the lock screen layout only shows CPU, memory, network and battery, so it skips the rest)
     Sensors.Sensor { id: cpu; sensorId: "cpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
-    Sensors.Sensor { id: gpu; sensorId: "gpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
+    Sensors.Sensor { id: gpu; enabled: !hud.lockScreen; sensorId: "gpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
     Sensors.Sensor { id: mem; sensorId: "memory/physical/usedPercent"; updateRateLimit: Math.max(2000, hud.slow) }
     Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: Math.max(1500, hud.slow) }
-    Sensors.Sensor { id: disk; sensorId: "disk/all/usedPercent"; updateRateLimit: Math.max(10000, hud.slow) }
-    Sensors.Sensor { id: temp; sensorId: "cpu/all/averageTemperature"; updateRateLimit: Math.max(3000, hud.slow) }
-    Sensors.Sensor { id: uptime; sensorId: "os/system/uptime"; updateRateLimit: Math.max(30000, hud.slow) }
+    Sensors.Sensor { id: disk; enabled: !hud.lockScreen; sensorId: "disk/all/usedPercent"; updateRateLimit: Math.max(10000, hud.slow) }
+    Sensors.Sensor { id: temp; enabled: !hud.lockScreen; sensorId: "cpu/all/averageTemperature"; updateRateLimit: Math.max(3000, hud.slow) }
+    Sensors.Sensor { id: uptime; enabled: !hud.lockScreen; sensorId: "os/system/uptime"; updateRateLimit: Math.max(30000, hud.slow) }
     Sensors.Sensor { id: host; sensorId: "os/system/hostname" }
     Sensors.Sensor { id: plasma; sensorId: "os/plasma/plasmaVersion" }
     Sensors.Sensor { id: kernel; sensorId: "os/kernel/prettyName" }
@@ -94,7 +95,8 @@ Item {
     readonly property string memCmd: "ps -eo comm,rss --no-headers | awk '{a[$1]+=$2} END{for(k in a) print a[k], k}' | sort -rn | head -1"
     P5Support.DataSource {
         engine: "executable"
-        connectedSources: hud.visible && !hud.paused ? [hud.cpuCmd, hud.memCmd] : []
+        // the lock screen layout doesn't show the top apps, so don't look them up there
+        connectedSources: hud.visible && !hud.paused && !hud.lockScreen ? [hud.cpuCmd, hud.memCmd] : []
         // top and ps walk every process, so don't run them often
         interval: hud.lowPower ? 30000 : 10000
         onNewData: (source, data) => {

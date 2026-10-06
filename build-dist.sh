@@ -3,7 +3,7 @@
 # theme (with splash) and fonts, plus install/uninstall scripts for whoever downloads it.
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION=1.6
+VERSION=1.7
 OUT=dist/submerge-$VERSION
 rm -rf "$OUT" && mkdir -p "$OUT"/{wallpaper,desktoptheme,look-and-feel,color-schemes,fonts}
 
@@ -48,7 +48,8 @@ if [ "${1:-}" = "--apply" ]; then
     # the pond on the lock screen too, with its own centred clock in place of Plasma's
     kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin org.submerge.wallpaper
     kwriteconfig6 --file kscreenlockerrc --group Greeter --group Wallpaper --group org.submerge.wallpaper --group General --key LockScreen true
-    kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key alwaysShowClock false
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key alwaysShowClock true
+    kwriteconfig6 --file kscreenlockerrc --group Greeter --group LnF --group General --key hideClockWhenIdle true
     echo "Applied. If the wallpaper doesn't switch, pick 'Submerge' under Desktop Wallpaper settings."
 else
     echo "Apply it in System Settings > Colours & Themes > Global Theme > Submerge,"
