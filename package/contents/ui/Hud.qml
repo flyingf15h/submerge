@@ -68,6 +68,10 @@ Item {
     readonly property color good: "#5fe08f"
     readonly property color low: "#ff4d5e"
     // green when there's plenty left, orange getting low, red nearly empty
+    readonly property bool pluggedIn: !!(power.data["AC Adapter"] || {})["Plugged in"]
+    readonly property string lockBatteryNote: batteryState === "CHARGING" ? "CHARGING"
+        : pluggedIn ? (batteryState === "FULLY CHARGED" || batteryPct >= 99 ? "FULL  ·  PLUGGED IN" : "PLUGGED IN")
+        : batteryLeft ? batteryLeft + " LEFT" : "ON BATTERY"
     readonly property color batteryColor: batteryPct > 50 ? good : batteryPct > 20 ? hot : low
 
     // called by the pond's frame timer, so the bars ease without full-rate animations
@@ -447,7 +451,8 @@ Item {
                 { k: "MEM",  v: () => Math.round(hud.pct(mem.value)) + "%", f: () => hud.pct(mem.value) / 100 },
                 { k: "NET",  v: () => "↓ " + hud.rate(down.value), f: () => Math.min(1, (down.value || 0) / 5242880) }
             ].concat(hud.hasBattery ? [
-                { k: "BATTERY", v: () => Math.round(hud.batteryPct) + "%" + (hud.batteryLeft && hud.batteryState.endsWith("LEFT") ? "  ·  " + hud.batteryLeft : ""),
+                // plugged in: say so (charging / full); unplugged: time left
+                { k: "BATTERY", v: () => Math.round(hud.batteryPct) + "%  ·  " + hud.lockBatteryNote,
                   f: () => hud.batteryPct / 100, battery: true }
             ] : [])
             Column {
@@ -457,7 +462,7 @@ Item {
                 Mono { text: "// " + modelData.k; font.pixelSize: 9 * hud.u; opacity: 0.8 }
                 Mono {
                     id: cellValue
-                    text: { cpu.value; mem.value; down.value; hud.batteryPct; hud.batteryLeft; return modelData.v(); }
+                    text: { cpu.value; mem.value; down.value; hud.batteryPct; hud.lockBatteryNote; return modelData.v(); }
                     font.pixelSize: 14 * hud.u
                     color: modelData.battery ? hud.batteryColor : hud.ink
                 }
