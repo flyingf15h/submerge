@@ -19,9 +19,10 @@ cp /usr/share/doc/fonts-ibm-plex/copyright "$OUT/fonts/IBM-Plex-LICENSE.txt"
 
 # previews shown in System Settings
 python3 - "$OUT" <<'PY'
-import sys
+import os, sys
 from PIL import Image
 out = sys.argv[1] + "/look-and-feel/org.submerge.desktop/contents/previews/"
+os.makedirs(out, exist_ok=True)
 im = Image.open("theme/screenshot.png").convert("RGB")
 im.resize((1920, int(1920 * im.height / im.width))).save(out + "fullscreenpreview.jpg", quality=88)
 im.resize((512, int(512 * im.height / im.width))).save(out + "preview.png")
