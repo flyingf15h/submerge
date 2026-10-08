@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import org.kde.ksysguard.sensors 1.0 as Sensors
 
 // The whole scene. Kept separate from main.qml so it can be run on its own for testing.
@@ -24,8 +25,13 @@ Item {
     property string player: "GUEST"
     property real textScale: 1.0
     property bool running: true
-    property real maxFps: 10            // 0 = redraw every screen refresh
+    // 0 = every screen refresh. The desktop only animates on AC, so it runs at the refresh rate;
+    // the sign-in screen caps it.
+    property real maxFps: 0
     property bool lowPower: false       // on battery: no live sensors, clock updated once a minute
+    property bool lockScreen: false
+    // follow the cursor (specimen box, ripples); off on battery, where the pond is still anyway
+    property bool trackCursor: true
     readonly property bool pointerInside: mouseX > -9000
 
     readonly property url img: Qt.resolvedUrl("../images/")
@@ -35,7 +41,6 @@ Item {
     property real t: 0
     property real mouseX: -9999
     property real mouseY: -9999
-    property real mouseSpeed: 0
 
     // head anchor of the straight pose (frame 3) and body length, from the original render-koi.js.
     // Fish5 has no shadow art, so both baby fish use the Fish6 shadow with the type 5 anchors.
@@ -182,11 +187,11 @@ Item {
     FrameTicker {
         running: pond.running && pond.visible
         maxFps: pond.maxFps
+        property real fgAccum: 0
         onTriggered: {
             const dt = Math.min(frameTime, 0.05);
             pond.t += dt;
             if (pond.ripples) pond.simTick(dt);
-            pond.mouseSpeed *= Math.pow(0.02, dt);
             for (let i = 0; i < fishRep.count; i++) { const it = fishRep.itemAt(i); if (it) it.step(dt); }
             // small fish give each other room so the pond never looks crowded in one spot
             for (let i = 0; i < fishRep.count; i++) {
@@ -203,7 +208,13 @@ Item {
                     }
                 }
             }
-            for (let i = 0; i < fgRep.count; i++) { const it = fgRep.itemAt(i); if (it) it.step(dt); }
+            // The big blurry fish are slow and soft, so 30 updates a second is plenty. Each update
+            // re-renders them and their blur, so this skips most of that work at 144 Hz.
+            fgAccum += dt;
+            if (fgAccum >= 1 / 30) {
+                for (let i = 0; i < fgRep.count; i++) { const it = fgRep.itemAt(i); if (it) it.step(fgAccum); }
+                fgAccum = 0;
+            }
             // the big blurry fish keep their distance from each other instead of piling up
             for (let i = 0; i < fgRep.count; i++) {
                 const a = (fgRep.itemAt(i) || {}).fish;
@@ -372,17 +383,10 @@ Item {
         Item { id: shadowLayer; anchors.fill: parent }
         }
 
-        // ---- koi, with a blue rim-light bloom ----
+        // ---- koi ----
         Item {
             id: fishLayer
             anchors.fill: parent
-            layer.enabled: true
-            layer.effect: ShadowFx {
-                shadowColor: "#5d8dff"
-                shadowBlur: 0.7
-                shadowOpacity: 0.85
-                shadowScale: 1.04
-            }
             Repeater {
                 id: fishRep
                 model: pond.ready ? pond.liveFish : 0
@@ -396,7 +400,7 @@ Item {
             visible: pond.motes
             Repeater {
                 id: moteRep
-                model: 45
+                model: 30
                 Image {
                     source: pond.img + "fx/mote.png"
                     property real px: Math.random() * pond.width
@@ -441,6 +445,7 @@ Item {
             running: pond.running
             // a paused pond (battery, covered, or the screen not in use) only updates once a minute
             lowPower: pond.lowPower || !pond.running
+            lockScreen: pond.lockScreen
             t: pond.t
             mouseX: pond.mouseX
             mouseY: pond.mouseY
@@ -512,23 +517,58 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-        property real lx: 0
-        property real ly: 0
-        property real lt: 0
-        onPositionChanged: {
-            const e = mouse;
-            const now = Date.now();
-            const dt = Math.max(1, now - lt) / 1000;
-            const v = Math.sqrt((e.x - lx) ** 2 + (e.y - ly) ** 2) / dt;
-            if (now - lt < 200) pond.mouseSpeed = Math.max(pond.mouseSpeed, v);
-            if (v > 700 && now - lt < 200 && Math.random() < 0.12) pond.drop(e.x, e.y, 0.008, 0.07);
-            lx = e.x; ly = e.y; lt = now;
-            pond.mouseX = e.x; pond.mouseY = e.y;
+    // The desktop's icon view sits on top of the wallpaper and takes the hover events, so a
+    // MouseArea in here never sees the cursor. Passive HoverHandlers still get them: one on the
+    // window's root item (enough on the lock screen), plus one on the icon view's
+    // MouseEventListener, which otherwise swallows hover before it reaches the root. The icon
+    // view can load after the wallpaper, so look for it again a few times. The handlers live on
+    // other items, so they're destroyed with the pond rather than left behind on a reload.
+    property var cursorHandlers: []
+    function attachCursor() {
+        // the lock screen builds the wallpaper before putting it in a window; wait until it is,
+        // or the handler lands on a parent that's thrown away
+        if (!pond.Window.window) return;
+        let top = pond;
+        while (top.parent) top = top.parent;
+        const targets = [top];
+        const find = (item) => {
+            if (String(item).startsWith("MouseEventListener") && item.width >= top.width / 2 && item.height >= top.height / 2)
+                targets.push(item);
+            for (let i = 0; i < item.children.length; i++) find(item.children[i]);
+        };
+        find(top);
+        const have = cursorHandlers.map(h => h.parent);
+        const added = targets.filter(t => have.indexOf(t) < 0).map(t => cursorComponent.createObject(t));
+        if (added.length) cursorHandlers = cursorHandlers.concat(added);
+    }
+    Component.onCompleted: attachCursor()
+    Window.onWindowChanged: attachCursor()
+    // a handler whose item already went away with the window shows up as an error, not an object
+    Component.onDestruction: cursorHandlers.forEach(h => { if (h && typeof h.destroy === "function") h.destroy(); })
+    onTrackCursorChanged: if (!trackCursor) { mouseX = -9999; mouseY = -9999; }
+    Timer {
+        property int tries: 0
+        interval: 2000; repeat: true; running: tries < 5
+        onTriggered: { tries++; pond.attachCursor(); }
+    }
+    Component {
+        id: cursorComponent
+        HoverHandler {
+            // disabled handlers get no events at all, so on battery the cursor costs nothing
+            enabled: pond.trackCursor
+            property real lx: 0
+            property real ly: 0
+            property real lt: 0
+            onPointChanged: {
+                const p = pond.mapFromItem(null, point.scenePosition.x, point.scenePosition.y);
+                if (p.x < 0 || p.y < 0 || p.x > pond.width || p.y > pond.height) { pond.mouseX = pond.mouseY = -9999; return; }
+                const now = Date.now();
+                const v = Math.sqrt((p.x - lx) ** 2 + (p.y - ly) ** 2) / (Math.max(1, now - lt) / 1000);
+                if (pond.running && v > 700 && now - lt < 200 && Math.random() < 0.12) pond.drop(p.x, p.y, 0.008, 0.07);
+                lx = p.x; ly = p.y; lt = now;
+                pond.mouseX = p.x; pond.mouseY = p.y;
+            }
+            onHoveredChanged: if (!hovered) { pond.mouseX = -9999; pond.mouseY = -9999; }
         }
-        onExited: { pond.mouseX = -9999; pond.mouseY = -9999; }
     }
 }

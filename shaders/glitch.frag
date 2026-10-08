@@ -23,10 +23,13 @@ void main() {
 
     // a constant slight split that widens during a burst
     float split = (0.0018 + 0.004 * burst + 0.0006 * sin(time * 1.3 + seed)) * strength;
+    // this runs over the whole screen for each blurry fish, so read each sample once and skip
+    // the rest where the fish isn't
     vec4 g = texture2D(source, uv);
     vec4 rs = texture2D(source, uv + vec2(split, 0.0));
     vec4 bs = texture2D(source, uv - vec2(split, 0.0));
     float a = max(g.a, max(rs.a, bs.a));
+    if (a < 0.002) { gl_FragColor = vec4(0.0); return; }
     vec3 col = vec3(rs.r, g.g, bs.b);
     col = max(mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, 1.0 + saturation), 0.0);
     col *= 0.94 + 0.06 * sin(uv.y * 900.0 + time * 6.0);   // scanlines

@@ -22,7 +22,8 @@ def write(rel, text):
     for sub in ("widgets", "translucent/widgets", "opaque/widgets") if rel == "panel-background" else ("widgets",):
         path = os.path.join(OUT, sub, rel + ".svgz")
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        t = text if sub != "translucent/widgets" else text.replace('fill-opacity="0.92"', 'fill-opacity="0.72"')
+        # the translucent panel is glass over the pond: mostly see-through, blurred behind by KWin
+        t = text if sub != "translucent/widgets" else text.replace('fill-opacity="0.92"', 'fill-opacity="0.42"')
         with gzip.open(path, "wt") as f:
             f.write(t)
 
@@ -109,7 +110,7 @@ def main():
     write("tasks", tasks())
     shutil.copy(os.path.join(HERE, "colors"), os.path.join(OUT, "colors"))
     with open(os.path.join(OUT, "plasmarc"), "w") as f:
-        f.write("[ContrastEffect]\nenabled=true\ncontrast=0.9\nintensity=0.6\nsaturation=1.6\n\n[AdaptiveTransparency]\nenabled=true\n")
+        f.write("[ContrastEffect]\nenabled=true\ncontrast=0.8\nintensity=1.0\nsaturation=1.5\n\n[AdaptiveTransparency]\nenabled=true\n")
     meta = {"KPlugin": {"Id": "submerge", "Name": "Submerge", "Description": "Night-aquarium panel to match the Submerge wallpaper",
                         "Authors": [{"Name": "flyingf15h"}], "License": "GPL-3.0-or-later", "Version": "1.0", "EnabledByDefault": True},
             "X-Plasma-API": "5.0"}

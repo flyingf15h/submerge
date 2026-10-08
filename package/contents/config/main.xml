@@ -17,9 +17,8 @@
     <entry name="Player" type="String"><default>GUEST</default></entry>
     <entry name="TextScale" type="Int"><default>100</default></entry>
     <entry name="PauseWhenCovered" type="Bool"><default>true</default></entry>
-    <entry name="PauseOnBattery" type="Bool"><default>true</default></entry>
+    <entry name="PauseOnBattery" type="Bool"><default>false</default></entry>
     <entry name="ActiveScreenOnly" type="Bool"><default>false</default></entry>
-    <entry name="FrameRate" type="Int"><default>10</default></entry>
     <!-- set in kscreenlockerrc: the lock screen hides every window, so ignore them there -->
     <entry name="LockScreen" type="Bool"><default>false</default></entry>
   </group>

@@ -14,14 +14,18 @@ Item {
     property real mouseY: -9999
     property real textScale: 1
     readonly property bool pointing: mouseX > -9000
+    readonly property int slowT: Math.floor(t)
 
     readonly property real u: height / 1080 * textScale
     readonly property color ink: "#e6efff"
     readonly property color line: "#9fbaff"
     readonly property string mono: "IBM Plex Mono"
 
-    layer.enabled: true
-    layer.effect: ShadowFx {
+    // Only the text glows. A glow layer over the whole overlay was re-rendered (and blurred)
+    // on every frame because the specimen box moves every frame; a layer on just the text only
+    // redraws when the text changes, and moving it around costs nothing.
+    readonly property real glowPad: 36
+    component Glow: ShadowFx {
         shadowColor: "#3f73ff"
         shadowBlur: 0.7
         shadowOpacity: 0.95
@@ -60,10 +64,10 @@ Item {
     function reading(k) {
         const c = cond;
         switch (k) {
-        case "TEMP": return { v: c ? (c.temp + 0.1 * Math.sin(t * 0.05)).toFixed(1) + " °C" : "--", f: c ? (c.temp - 18) / 10 : 0 };
-        case "PH":   return { v: c ? (c.ph + 0.02 * Math.sin(t * 0.03 + 1)).toFixed(2) : "--", f: c ? (c.ph - 6.2) / 2 : 0 };
+        case "TEMP": return { v: c ? (c.temp + 0.1 * Math.sin(slowT * 0.05)).toFixed(1) + " °C" : "--", f: c ? (c.temp - 18) / 10 : 0 };
+        case "PH":   return { v: c ? (c.ph + 0.02 * Math.sin(slowT * 0.03 + 1)).toFixed(2) : "--", f: c ? (c.ph - 6.2) / 2 : 0 };
         case "O₂":   return { v: c ? Math.round(c.o2) + " %" : "--", f: c ? (c.o2 - 80) / 20 : 0 };
-        case "FLOW": return { v: c ? (c.flow + 0.01 * Math.sin(t * 0.11)).toFixed(2) + " L/s" : "--", f: c ? c.flow / 0.7 : 0 };
+        case "FLOW": return { v: c ? (c.flow + 0.01 * Math.sin(slowT * 0.11)).toFixed(2) + " L/s" : "--", f: c ? c.flow / 0.7 : 0 };
         case "SPECIMENS": return { v: String((fishItems ? fishItems.count : 0) + (fgItems ? fgItems.count : 0)), f: 1 };
         default: return { v: c ? c.dominant : "--", f: 1 };
         }
@@ -105,6 +109,9 @@ Item {
                 for (const c of list) {
                     const p = cyber.centreOf(c.fish);
                     const d = (p[0] - cyber.mouseX) ** 2 + (p[1] - cyber.mouseY) ** 2;
+                    // the blurry fish are huge, so their middle is often "nearest"; only lock onto
+                    // one when the cursor is actually on its body
+                    if (c.blur && d > (c.fish.len * 0.3) ** 2) continue;
                     if (d < bestD) { bestD = d; best = c; }
                 }
                 retarget(best);
@@ -135,11 +142,12 @@ Item {
             size += (f.len * (target.blur ? 0.9 : 1.25) - size) * k;
             const hdg = "HDG " + String(Math.round(((f.angle * 180 / Math.PI) % 360 + 360) % 360)).padStart(3, "0") + "°";
             const dep = "DEPTH " + (0.3 + f.depth * 1.2).toFixed(2) + "m";
-            if (!target.blur) { hdgText = hdg; depthText = dep; }
-            else if (Math.floor(cyber.t * 6) !== tick) {   // re-scramble a few times a second
+            // the readout sits on a glow layer that redraws whenever the text changes, so only
+            // refresh it a few times a second (and re-scramble the blurry fish's at the same rate)
+            if (Math.floor(cyber.t * 6) !== tick) {
                 tick = Math.floor(cyber.t * 6);
-                hdgText = cyber.scramble(hdg);
-                depthText = cyber.scramble(dep);
+                hdgText = target.blur ? cyber.scramble(hdg) : hdg;
+                depthText = target.blur ? cyber.scramble(dep) : dep;
             }
         }
 
@@ -168,23 +176,32 @@ Item {
             width: 34 * cyber.u; height: Math.max(1, cyber.u)
             color: cyber.line; opacity: 0.7
         }
-        Column {
-            x: box.width + 40 * cyber.u
-            y: -8 * cyber.u
-            spacing: 2 * cyber.u
-            Mono {
-                text: !box.target ? "" : box.target.blur ? "SPECIMEN K-???" : "SPECIMEN K-" + String(box.target.id).padStart(2, "0")
-                font.pixelSize: 12 * cyber.u
-                font.weight: Font.Medium
-            }
-            Mono {
-                text: !box.target ? "" : box.target.blur ? "???  ·  ???"
-                      : box.target.fish.variety + "  ·  " + (box.target.fish.baby ? "JUVENILE" : "ADULT")
-                opacity: 0.92
-            }
-            Mono {
-                text: box.target ? box.hdgText + "   " + box.depthText : ""
-                opacity: 0.92
+        Item {
+            x: box.width + 40 * cyber.u - cyber.glowPad
+            y: -8 * cyber.u - cyber.glowPad
+            width: specimen.width + 2 * cyber.glowPad
+            height: specimen.height + 2 * cyber.glowPad
+            layer.enabled: box.fade > 0
+            layer.effect: Glow {}
+            Column {
+                id: specimen
+                x: cyber.glowPad
+                y: cyber.glowPad
+                spacing: 2 * cyber.u
+                Mono {
+                    text: !box.target ? "" : box.target.blur ? "SPECIMEN K-???" : "SPECIMEN K-" + String(box.target.id).padStart(2, "0")
+                    font.pixelSize: 12 * cyber.u
+                    font.weight: Font.Medium
+                }
+                Mono {
+                    text: !box.target ? "" : box.target.blur ? "???  ·  ???"
+                          : box.target.fish.variety + "  ·  " + (box.target.fish.baby ? "JUVENILE" : "ADULT")
+                    opacity: 0.92
+                }
+                Mono {
+                    text: box.target ? box.hdgText + "   " + box.depthText : ""
+                    opacity: 0.92
+                }
             }
         }
     }
@@ -224,32 +241,40 @@ Item {
     }
 
     // ---- tank telemetry ----
-    Column {
-        x: cyber.width - 290 * cyber.u
-        y: cyber.height * 0.42
-        spacing: 5 * cyber.u
-        opacity: 0.92
-        readonly property real wob: Math.sin(cyber.t * 0.07)
+    Item {
+        x: cyber.width - 290 * cyber.u - cyber.glowPad
+        y: cyber.height * 0.42 - cyber.glowPad
+        width: telemetry.width + 2 * cyber.glowPad
+        height: telemetry.height + 2 * cyber.glowPad
+        layer.enabled: true
+        layer.effect: Glow {}
+        Column {
+            id: telemetry
+            x: cyber.glowPad
+            y: cyber.glowPad
+            spacing: 5 * cyber.u
+            opacity: 0.92
 
-        Mono { text: "// TANK 03  —  BOOT " + (cyber.cond ? (cyber.cond.seed % 65536).toString(16).toUpperCase().padStart(4, "0") : "----"); font.pixelSize: 10 * cyber.u; opacity: 0.92 }
-        Rectangle { width: 210 * cyber.u; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.45 }
-        Repeater {
-            // Qt 5 drops functions from array models, so each row looks its values up by name
-            model: ["TEMP", "PH", "O₂", "FLOW", "SPECIMENS", "THRIVING"]
-            Item {
-                required property var modelData
-                readonly property var r: { cyber.t; cyber.cond; return cyber.reading(modelData); }
-                width: 210 * cyber.u
-                height: 16 * cyber.u
-                Mono { text: parent.modelData; opacity: 0.92 }
-                Mono { anchors.right: parent.right; text: parent.r.v }
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    width: parent.width; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.18
-                }
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    width: parent.width * Math.max(0, Math.min(1, parent.r.f)); height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.6
+            Mono { text: "// TANK 03  —  BOOT " + (cyber.cond ? (cyber.cond.seed % 65536).toString(16).toUpperCase().padStart(4, "0") : "----"); font.pixelSize: 10 * cyber.u; opacity: 0.92 }
+            Rectangle { width: 210 * cyber.u; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.45 }
+            Repeater {
+                // Qt 5 drops functions from array models, so each row looks its values up by name
+                model: ["TEMP", "PH", "O₂", "FLOW", "SPECIMENS", "THRIVING"]
+                Item {
+                    required property var modelData
+                    readonly property var r: cyber.reading(modelData)
+                    width: 210 * cyber.u
+                    height: 16 * cyber.u
+                    Mono { text: parent.modelData; opacity: 0.92 }
+                    Mono { anchors.right: parent.right; text: parent.r.v }
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        width: parent.width; height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.18
+                    }
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        width: parent.width * Math.max(0, Math.min(1, parent.r.f)); height: Math.max(1, cyber.u); color: cyber.line; opacity: 0.6
+                    }
                 }
             }
         }

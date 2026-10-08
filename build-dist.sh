@@ -6,6 +6,13 @@ cd "$(dirname "$0")"
 VERSION=1.0
 NAME=submerge-$VERSION-plasma5
 OUT=dist/$NAME
+# the fonts and their licence come from Debian's fonts-ibm-plex unless FONTS / FONT_LICENSE say
+# otherwise (e.g. the fonts folder of an earlier release)
+FONTS="${FONTS:-/usr/share/fonts/truetype/ibm-plex}"
+FONT_LICENSE="${FONT_LICENSE:-/usr/share/doc/fonts-ibm-plex/copyright}"
+# the previews need Pillow; borrow it through uv when the system Python doesn't have it
+PY=python3
+python3 -c "import PIL" 2>/dev/null || PY="uv run -q --no-project --with pillow python"
 rm -rf "$OUT" && mkdir -p "$OUT"/{wallpaper,desktoptheme,look-and-feel,color-schemes,fonts}
 
 ./install.sh --shaders-only
@@ -13,12 +20,12 @@ cp -r package "$OUT/wallpaper/org.submerge.wallpaper"
 python3 plasma-style/build.py "$OUT/desktoptheme/submerge" >/dev/null
 cp -r theme/look-and-feel/org.submerge.desktop "$OUT/look-and-feel/"
 cp plasma-style/colors "$OUT/color-schemes/Submerge.colors"
-cp /usr/share/fonts/truetype/ibm-plex/IBMPlexMono-{Light,Regular,Medium}.ttf \
-   /usr/share/fonts/truetype/ibm-plex/IBMPlexSansCondensed-{ExtraLight,Light,Regular}.ttf "$OUT/fonts/"
-cp /usr/share/doc/fonts-ibm-plex/copyright "$OUT/fonts/IBM-Plex-LICENSE.txt"
+cp "$FONTS"/IBMPlexMono-{Light,Regular,Medium}.ttf \
+   "$FONTS"/IBMPlexSansCondensed-{ExtraLight,Light,Regular}.ttf "$OUT/fonts/"
+cp "$FONT_LICENSE" "$OUT/fonts/IBM-Plex-LICENSE.txt"
 
 # previews shown in System Settings
-python3 - "$OUT" <<'PY'
+$PY - "$OUT" <<'PY'
 import os, sys
 from PIL import Image
 out = sys.argv[1] + "/look-and-feel/org.submerge.desktop/contents/previews/"

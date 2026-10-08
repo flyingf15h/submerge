@@ -15,10 +15,20 @@ Item {
         id: power
         engine: "powermanagement"
         connectedSources: ["AC Adapter", "Battery"]
+        // a binding on power.data["Battery"] that first ran before the key existed never
+        // re-runs, so copy the values over as they arrive
+        onNewData: {
+            if (sourceName === "Battery") root.battery = data;
+            else root.acPlugged = data["Plugged in"];
+        }
     }
-    readonly property bool onBattery: !!power.data["Battery"] && !!power.data["Battery"]["Has Battery"]
-                                      && !!power.data["AC Adapter"] && power.data["AC Adapter"]["Plugged in"] === false
-    readonly property bool lowPower: onBattery && cfg.PauseOnBattery
+    // Plasma 5.27's "AC Adapter" source can report plugged in while the battery drains (seen on
+    // a laptop with a USB-C power source next to the barrel jack), so trust the battery's state
+    property var battery: ({})
+    property var acPlugged
+    readonly property bool usingBattery: !!battery["Has Battery"] && (battery["State"] === "Discharging" || acPlugged === false)
+    // on battery the pond either holds a still frame or keeps swimming at 15 fps
+    readonly property bool lowPower: usingBattery && cfg.PauseOnBattery
 
     // ---- which screens are worth animating ----
     // A maximized or fullscreen window covers the whole pond on its screen, so that screen holds a
@@ -118,8 +128,12 @@ Item {
         title: cfg.Title
         player: cfg.Player
         textScale: cfg.TextScale / 100
-        maxFps: cfg.FrameRate
-        lowPower: root.lowPower
+        // the screen's refresh rate on AC, 15 fps on battery (same visuals)
+        maxFps: root.usingBattery ? 15 : 0
+        // the HUD's sensors and clock slow down on battery either way
+        lowPower: root.usingBattery
+        lockScreen: cfg.LockScreen
+        trackCursor: !root.usingBattery
         running: root.visible && !root.lowPower
                  && (cfg.LockScreen || (root.inUse && !(root.covered && cfg.PauseWhenCovered)))
     }

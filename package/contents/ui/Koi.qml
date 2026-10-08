@@ -174,7 +174,7 @@ Item {
         x: fish.fx + lx / ln * off
         y: fish.fy + ly / ln * off
         rotation: fish.deg + fish.yaw
-        opacity: (0.6 + fish.depth * 0.25) * (fish.glitchShadow ? 0.6 : 1)
+        opacity: 0.6 + fish.depth * 0.25
         Image {
             id: shadowTex
             source: pond.img + "fish/s" + (fish.type >= 5 ? 6 : fish.type) + ".png"

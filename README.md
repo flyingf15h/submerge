@@ -10,8 +10,10 @@ behaves the same; see [Plasma 5 port](#plasma-5-port) for what changed underneat
 - **Live wallpaper**: koi that swim in bursts and glides and bend into their turns, real
   ripples from a small water simulation, caustic light along the top, and two or three big
   blurry glitching koi drifting past the glass.
-- **HUD**: big clock, live CPU / GPU / memory / network / storage readouts (with the app using
-  the most CPU and memory), and a system status line.
+- **HUD**: big clock, live CPU / GPU / memory / network readouts (with the app using
+  the most CPU and memory; GPU shows whichever of the integrated and discrete GPU is busier),
+  battery with time left and power draw (red "DGPU ON" tag while the discrete GPU is awake),
+  and a system status line.
 - **Tank monitor**: one specimen box that locks onto the fish nearest your cursor, a depth
   ruler, and tank conditions that are rerolled every boot. Warm water brings out the orange
   varieties, acidic water the teal ones, alkaline water the violet ones, low oxygen more juveniles.
@@ -65,15 +67,23 @@ Tuned to run on integrated graphics across two high-refresh screens. With the de
 about a fifth of the GPU work of the first port, and nothing at all while paused. All of these
 are under Performance in the wallpaper settings:
 
-- **Frame rate limit** (default 10 fps). Plasma 5 redraws at the screen's refresh rate, which on
-  a 144 or 165 Hz screen meant redrawing the whole pond ~150 times a second. The fish, the
-  scanner, the HUD bars and the ripple simulation all advance on the same capped frames; the
-  simulation does up to three steps per frame, on a half-resolution grid below 20 fps, so the
-  ripples keep their speed.
+- **Refresh-rate animation on AC.** The pond only moves on AC, so it runs at the screen's
+  refresh rate. What changes every frame is kept cheap: the big blurry fish update 30 times a
+  second, the glow only covers the scanner's text and is redrawn when that text changes (a few
+  times a second), and the HUD bars stop easing once they arrive.
+- **GPU and power readouts that don't wake the dGPU.** KDE's GPU sensor runs `nvidia-smi dmon`,
+  which keeps the dGPU awake (~3 W) just to report on it, so it isn't used. The iGPU's load (from
+  its idle counter), the dGPU's power state and the battery's draw are read from sysfs every 2 s
+  (every 15 s while paused) in one shell call using builtins. `nvidia-smi` is only asked for the
+  dGPU's load while the card is already awake, on AC, and at most every 30 s: one query keeps the
+  card up for ~20 s, so an idle card can still power down in between.
 - **Pause when covered** by a maximized or fullscreen window, per screen. Show Desktop counts as
   uncovered.
-- **Still frame on battery.** Sensors and the clock drop to once a minute, so it costs about the
-  same as a static wallpaper. Any paused screen does the same, and the `top`/`ps` polling stops.
+- **15 fps on battery.** On battery the fish keep swimming at 15 fps with the same visuals as on
+  AC; the ripple simulation switches to a half-resolution grid so ripples keep their speed.
+  Sensors and the clock drop to once a minute, `top`/`ps` polling stops, and the cursor isn't
+  tracked. Tick "Hold a still frame on battery" to freeze it instead, which costs about the same
+  as a static wallpaper.
 - **Optional: only animate the screen in use** (off by default): the one with the focused window,
   its desktop clicked, or the pointer on its desktop; if that one is covered, the uncovered
   screens animate instead. Plasma 5 gives every screen its own window and GL context, so one
@@ -86,8 +96,11 @@ are under Performance in the wallpaper settings:
 
 - **Lock screen:** in `~/.config/kscreenlockerrc` set `[Greeter] WallpaperPlugin=org.submerge.wallpaper`
   and `[Greeter][Wallpaper][org.submerge.wallpaper][General] LockScreen=true` (the lock screen
-  hides every window, so the cover checks are skipped there). The Breeze lock screen UI is drawn
-  on top.
+  hides every window, so the cover checks are skipped there). The HUD switches to a centred
+  layout: title and clock up top, CPU / memory / network / battery (with time left and power draw) along the bottom, and
+  skips the sensors it doesn't show. The Breeze lock screen UI is drawn on top. The HUD already shows the time, so also set `[Greeter][LnF][General] alwaysShowClock=false`
+  to drop Breeze's centre clock while the lock screen is idle (same as unticking "Keep visible
+  when unlocking prompt disappears" under System Settings > Screen Locking > Appearance).
 - **Sign-in screen (SDDM):** from the release folder, `sudo sddm/install.sh` builds
   `/usr/share/sddm/themes/submerge` from the installed Breeze theme with the pond behind it (no
   HUD: its readouts need services that only run after login) and selects it in
