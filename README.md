@@ -74,8 +74,8 @@ sudo ./install.sh            # undo with: sudo ./install.sh --remove
 ## Plasma 5
 
 [darshg321](https://github.com/darshg321) ported Submerge to Plasma 5.27 on the
-[`plasma5` branch](../../tree/plasma5), and came up with the frame rate cap, multi-step ripples,
-battery readout and lock / sign-in screens that this version now uses too.
+[`plasma5` branch](../../tree/plasma5). This version also uses his multi-step ripples, the battery
+row in the HUD and the sign-in screen theme.
 
 ## License
 
