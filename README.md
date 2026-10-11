@@ -88,6 +88,9 @@ are under Performance in the wallpaper settings:
   its desktop clicked, or the pointer on its desktop; if that one is covered, the uncovered
   screens animate instead. Plasma 5 gives every screen its own window and GL context, so one
   rendered pond can't be mirrored to several screens.
+- **Pause switch:** the `Paused` setting holds a still frame on every screen. Scripts can flip it
+  through Plasma's scripting API, for example while a game runs:
+  `qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript 'desktops().forEach(function (d) { if (d.wallpaperPlugin != "org.submerge.wallpaper") return; d.currentConfigGroup = ["Wallpaper", "org.submerge.wallpaper", "General"]; d.writeConfig("Paused", true); })'`
 - Glows are blurred at 1/4 resolution and the foreground fish at 1/8 (`SoftBlur.qml`), each
   foreground fish is a single full-screen pass, and the procedural caustics only cover the top
   third of the screen.

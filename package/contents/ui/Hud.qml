@@ -43,7 +43,7 @@ Item {
     onLowPowerChanged: clock.restart()
 
     // ---- live system sensors ----
-    // No GPU load sensor: on this kind of laptop it runs `nvidia-smi dmon`, which keeps the dGPU
+    // No GPU load sensor: with an NVIDIA dGPU it runs `nvidia-smi dmon`, which keeps the dGPU
     // awake (~3 W) just to report on it. The dGPU's power state is read from sysfs instead.
     // The lock screen layout only shows CPU, memory, network and power, so it skips the rest.
     Sensors.Sensor { id: cpu; sensorId: "cpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }

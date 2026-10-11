@@ -134,7 +134,7 @@ Item {
         lowPower: root.usingBattery
         lockScreen: cfg.LockScreen
         trackCursor: !root.usingBattery
-        running: root.visible && !root.lowPower
+        running: root.visible && !root.lowPower && !cfg.Paused
                  && (cfg.LockScreen || (root.inUse && !(root.covered && cfg.PauseWhenCovered)))
     }
 }

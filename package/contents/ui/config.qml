@@ -18,6 +18,7 @@ Kirigami.FormLayout {
     property alias cfg_PauseWhenCovered: pauseCovered.checked
     property alias cfg_PauseOnBattery: pauseBattery.checked
     property alias cfg_ActiveScreenOnly: activeScreen.checked
+    property alias cfg_Paused: paused.checked
 
     QQC2.SpinBox { id: fishCount; Kirigami.FormData.label: "Fish:"; from: 1; to: 40 }
     QQC2.SpinBox { id: fishSize; Kirigami.FormData.label: "Fish size (%):"; from: 40; to: 250; stepSize: 10 }
@@ -37,4 +38,5 @@ Kirigami.FormLayout {
     QQC2.CheckBox { id: pauseBattery; Kirigami.FormData.label: "Performance:"; text: "Hold a still frame on battery (otherwise 15 fps; on AC it runs at the screen's refresh rate)" }
     QQC2.CheckBox { id: activeScreen; text: "With several screens, only animate the one in use" }
     QQC2.CheckBox { id: pauseCovered; text: "Pause while a maximized or fullscreen window covers the screen" }
+    QQC2.CheckBox { id: paused; text: "Paused (hold a still frame everywhere)" }
 }
