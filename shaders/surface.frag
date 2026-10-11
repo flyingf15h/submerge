@@ -34,6 +34,11 @@ void main() {
     float band = pow(smoothstep(0.26, 0.0, uv.y), 1.8);
     // soft lamp glow hugging the very top edge
     float lamp = exp(-uv.y * 14.0) * (0.75 + 0.25 * sin(uv.x * 7.0 + time * 0.3));
-    vec3 col = vec3(0.45, 0.75, 1.0) * c * band * 0.55 + vec3(0.35, 0.6, 1.0) * lamp * 0.35;
+    // the base light stays blue (paler light piles up into a grey wash along the top), and the
+    // brightest glints turn soft gold in patches that drift across the surface over time
+    float warm = smoothstep(0.35, 0.8, 0.5 + 0.3 * sin(uv.x * 3.1 + time * 0.045)
+                                           + 0.2 * sin(uv.x * 7.3 - time * 0.07 + 1.3));
+    vec3 col = vec3(0.22, 0.62, 1.0) * c * band * 0.55 + vec3(0.1, 0.42, 1.0) * lamp * 0.35
+             + vec3(1.0, 0.78, 0.38) * min(c * c, 2.0) * band * warm * 0.35;
     gl_FragColor = vec4(col * strength, 0.0) * qt_Opacity;
 }

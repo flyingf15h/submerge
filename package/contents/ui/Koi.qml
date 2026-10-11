@@ -51,7 +51,7 @@ Item {
     readonly property real drive: Math.max(beat, Math.min(1, Math.abs(turn) * 0.8))
     readonly property real yaw: Math.sin(swimPhase + 0.6) * 2.8 * drive
     // fold angle for the back half; negative so the tail trails to the outside of the turn
-    readonly property real bendAng: -Math.max(-0.7, Math.min(0.7, turn * 0.9))
+    readonly property real bendAng: -Math.max(-1.3, Math.min(1.3, turn * 1.5))
     readonly property real swimAmp: len * (0.02 + 0.07 * drive)
     readonly property real shadowRoll: Math.random()
     readonly property bool glitchShadow: shadowRoll > 0.82
@@ -157,7 +157,7 @@ Item {
             property real itemH: height
             property vector4d tint: Qt.vector4d(0, 0, 0, 0)
             property real glitchy: 0
-            mesh: GridMesh { resolution: Qt.size(2, 28) }
+            mesh: GridMesh { resolution: Qt.size(4, 32) }
             vertexShader: pond.shaders + "fish.vert"
             fragmentShader: pond.shaders + "fish.frag"
         }
@@ -196,7 +196,7 @@ Item {
             property real itemH: height
             property vector4d tint: fish.shadowTint
             property real glitchy: fish.glitchShadow ? 1 : 0
-            mesh: GridMesh { resolution: Qt.size(2, 20) }
+            mesh: GridMesh { resolution: Qt.size(4, 28) }
             vertexShader: pond.shaders + "fish.vert"
             fragmentShader: pond.shaders + "fish.frag"
         }

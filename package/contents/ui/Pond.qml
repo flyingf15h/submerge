@@ -276,24 +276,24 @@ Item {
             }
         }
 
-        // two drifting caustic layers, like the original site
-        Repeater {
-            model: 7
-            Image {
-                required property int index
-                anchors.fill: parent
-                source: pond.img + "water/c" + (index + 1) + ".png"
-                fillMode: Image.PreserveAspectCrop
-                readonly property real ph: (pond.t * 0.9) % 7
-                readonly property real d: Math.abs(((ph - index + 10.5) % 7) - 3.5)
-                opacity: Math.max(0, 1 - d) * 0.7
-            }
-        }
+        // two drifting caustic layers, like the original site. The art is a soft cyan that the
+        // saturated grade pulls toward the water's blue, so the lines are brightened and paled
+        // a little to keep the light visible
         Item {
             anchors.fill: parent
-            scale: 1.4
-            rotation: 12
-            opacity: 0.45
+            layer.enabled: true
+            layer.effect: ShaderEffect {
+                fragmentShader: "
+                    varying highp vec2 qt_TexCoord0;
+                    uniform sampler2D source;
+                    uniform lowp float qt_Opacity;
+                    void main() {
+                        lowp vec4 c = texture2D(source, qt_TexCoord0);
+                        lowp vec3 rgb = c.rgb + 0.35 * c.a;
+                        lowp float l = dot(rgb, vec3(0.299, 0.587, 0.114));
+                        gl_FragColor = vec4(mix(vec3(l), rgb, 0.75), c.a) * qt_Opacity;
+                    }"
+            }
             Repeater {
                 model: 7
                 Image {
@@ -301,9 +301,27 @@ Item {
                     anchors.fill: parent
                     source: pond.img + "water/c" + (index + 1) + ".png"
                     fillMode: Image.PreserveAspectCrop
-                    readonly property real ph: (pond.t * 1.26 + 3.5) % 7
+                    readonly property real ph: (pond.t * 0.9) % 7
                     readonly property real d: Math.abs(((ph - index + 10.5) % 7) - 3.5)
-                    opacity: Math.max(0, 1 - d)
+                    opacity: Math.max(0, 1 - d) * 0.85
+                }
+            }
+            Item {
+                anchors.fill: parent
+                scale: 1.4
+                rotation: 12
+                opacity: 0.55
+                Repeater {
+                    model: 7
+                    Image {
+                        required property int index
+                        anchors.fill: parent
+                        source: pond.img + "water/c" + (index + 1) + ".png"
+                        fillMode: Image.PreserveAspectCrop
+                        readonly property real ph: (pond.t * 1.26 + 3.5) % 7
+                        readonly property real d: Math.abs(((ph - index + 10.5) % 7) - 3.5)
+                        opacity: Math.max(0, 1 - d)
+                    }
                 }
             }
         }
@@ -313,11 +331,34 @@ Item {
             anchors.fill: parent
             visible: pond.lights
             Image {
+                id: surfaceGlow
                 source: pond.img + "fx/light_surface.png"
                 width: pond.width * 1.1; height: width * 0.5
                 x: pond.width * 0.35 - width / 2 + Math.sin(pond.t * 0.05) * 40
                 y: -height * 0.45
+                visible: false
+            }
+            // the glow art is almost white, which washed the top of the screen out to grey,
+            // so it's tinted toward the water's blue
+            ShaderEffect {
+                x: surfaceGlow.x; y: surfaceGlow.y
+                width: surfaceGlow.width; height: surfaceGlow.height
                 opacity: 0.7
+                property variant source: surfaceGlow
+                property color tint: "#2a7dff"
+                property real amount: 0.62
+                fragmentShader: "
+                    varying highp vec2 qt_TexCoord0;
+                    uniform sampler2D source;
+                    uniform lowp vec4 tint;
+                    uniform lowp float amount;
+                    uniform lowp float qt_Opacity;
+                    void main() {
+                        lowp vec4 c = texture2D(source, qt_TexCoord0);
+                        lowp vec3 w = vec3(0.299, 0.587, 0.114);
+                        lowp vec3 tinted = min(tint.rgb * dot(c.rgb, w) / dot(tint.rgb, w), vec3(c.a));
+                        gl_FragColor = vec4(mix(c.rgb, tinted, amount), c.a) * qt_Opacity;
+                    }"
             }
             Repeater {
                 model: [
@@ -349,6 +390,13 @@ Item {
             property real aspect: pond.width / Math.max(1, pond.height)
             property real strength: 1.1
             fragmentShader: pond.shaders + "surface.frag"
+        }
+        // slow patches of golden sun and shade drifting through the water
+        ShaderEffect {
+            anchors.fill: parent
+            property real time: pond.t
+            property real aspect: pond.width / Math.max(1, pond.height)
+            fragmentShader: pond.shaders + "spots.frag"
         }
         // the water falls off into darkness toward the bottom of the screen
         Rectangle {

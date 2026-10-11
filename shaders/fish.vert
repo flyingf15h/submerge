@@ -7,7 +7,7 @@ uniform mat4 qt_Matrix;
 uniform float qt_Opacity;
 uniform float phase;    // swim cycle, radians
 uniform float amp;      // tail swing in item pixels
-uniform float bend;     // how far the back half folds when turning, radians
+uniform float bend;     // how far the body curves when turning, radians (at the tail)
 uniform float headV;    // texture v of the head (anchor)
 uniform float tailV;    // texture v of the tail tip
 uniform float fog;      // how much the water haze covers it
@@ -18,16 +18,23 @@ uniform float glitchy;  // 1 = shadow coloured in uneven cyan/magenta/blue bands
 void main() {
     qt_TexCoord0 = qt_MultiTexCoord0;
     float w = clamp((qt_MultiTexCoord0.y - headV) / (tailV - headV), 0.0, 1.0);
-    // the head barely moves, the wave grows toward the tail and lags behind it
-    float swing = sin(phase - w * 3.2) * (0.06 + w * w) - sin(phase) * 0.06;
+    // a travelling wave runs down the whole body: the head barely moves, the middle sways a
+    // little and the tail the most, with about one S along the length
+    float env = 0.12 + 0.88 * pow(w, 1.4);
+    float swing = sin(phase - w * 4.4) * env - sin(phase) * 0.12;
     vec4 p = qt_Vertex;
     p.x += amp * swing;
-    // turning: the back of the body folds at a hip a little behind the head and swings round
-    // as one piece, so a turning fish makes an -l / l- shape instead of being skewed sideways
-    float hipV = headV + (tailV - headV) * 0.36;
-    vec2 hip = vec2(pivotX, hipV * itemH);
-    float a = bend * smoothstep(0.36, 0.62, w);
-    vec2 d = p.xy - hip;
-    p.xy = hip + vec2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a));
+    // turning: the body curves along a smooth arc that starts just behind the head, so a turning
+    // fish makes a soft C shape instead of folding at one joint. Each point keeps its distance
+    // from the spine and rides the arc, so the sprite never shears or kinks.
+    float startV = headV + (tailV - headV) * 0.08;
+    float sigma = p.y - startV * itemH;             // distance along the spine past the arc start
+    if (sigma > 0.0) {
+        float k = bend / ((tailV - startV) * itemH); // constant curvature, reaching bend at the tail
+        float th = k * sigma;
+        float dx = p.x - pivotX;
+        vec2 c = abs(k) > 1e-5 ? vec2(cos(th) - 1.0, sin(th)) / k : vec2(0.0, sigma);
+        p.xy = vec2(pivotX, startV * itemH) + c + dx * vec2(cos(th), sin(th));
+    }
     gl_Position = qt_Matrix * p;
 }
