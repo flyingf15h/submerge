@@ -213,21 +213,21 @@ Item {
             fgAccum += dt;
             if (fgAccum >= 1 / 30) {
                 for (let i = 0; i < fgRep.count; i++) { const it = fgRep.itemAt(i); if (it) it.step(fgAccum); }
-                fgAccum = 0;
-            }
-            // the big blurry fish keep their distance from each other instead of piling up
-            for (let i = 0; i < fgRep.count; i++) {
-                const a = (fgRep.itemAt(i) || {}).fish;
-                if (!a) continue;
-                for (let j = 0; j < fgRep.count; j++) {
-                    const b = (fgRep.itemAt(j) || {}).fish;
-                    if (!b || i === j) continue;
-                    const dx = a.fx - b.fx, dy = a.fy - b.fy;
-                    if (dx * dx + dy * dy < (pond.width * 0.38) ** 2) {
-                        const away = Math.atan2(dy, dx);
-                        a.baseAngle += Math.atan2(Math.sin(away - a.baseAngle), Math.cos(away - a.baseAngle)) * Math.min(1, dt * 2.5);
+                // keeping their distance from each other can run at the same rate
+                for (let i = 0; i < fgRep.count; i++) {
+                    const a = (fgRep.itemAt(i) || {}).fish;
+                    if (!a) continue;
+                    for (let j = 0; j < fgRep.count; j++) {
+                        const b = (fgRep.itemAt(j) || {}).fish;
+                        if (!b || i === j) continue;
+                        const dx = a.fx - b.fx, dy = a.fy - b.fy;
+                        if (dx * dx + dy * dy < (pond.width * 0.38) ** 2) {
+                            const away = Math.atan2(dy, dx);
+                            a.baseAngle += Math.atan2(Math.sin(away - a.baseAngle), Math.cos(away - a.baseAngle)) * Math.min(1, fgAccum * 2.5);
+                        }
                     }
                 }
+                fgAccum = 0;
             }
             if (pond.motes)
                 for (let j = 0; j < moteRep.count; j++) { const it = moteRep.itemAt(j); if (it) it.step(dt); }

@@ -45,14 +45,28 @@ Item {
     property real depthRate: 0.03 + Math.random() * 0.05
     property real depth: 0
 
-    readonly property real len: baseLen * pond.unit * (1 - depth * 0.12)
-    readonly property real s: len / def.len
+    // deeper fish look a little smaller; that's applied as a scale on the drawn items so the
+    // meshes keep a fixed size instead of being rebuilt every frame
+    readonly property real fullLen: baseLen * pond.unit
+    readonly property real depthScale: 1 - depth * 0.12
+    readonly property real len: fullLen * depthScale
+    readonly property real s: fullLen / def.len
     readonly property real deg: angle * 180 / Math.PI + 90
     readonly property real drive: Math.max(beat, Math.min(1, Math.abs(turn) * 0.8))
-    readonly property real yaw: Math.sin(swimPhase + 0.6) * 2.8 * drive
+    readonly property real yaw: Math.sin(swimPhase + 0.6) * 2.0 * drive
+    // how much the tail and fins stream out: drifts slowly so a fish is sometimes neat and
+    // sometimes all flowing fins, and they trail out more while it glides
+    property real flowSeed: Math.random() * 100
+    readonly property real flow: Math.max(0, Math.min(1, 0.45 + 0.45 * Math.sin(pond.t * 0.045 + flowSeed)
+                                                       + 0.25 * Math.sin(pond.t * 0.11 + flowSeed * 2.3)
+                                                       + 0.25 * (1 - drive)))
+    // fins tuck back during a burst and spread out while gliding
+    readonly property real finFold: Math.max(-0.35, Math.min(0.5, drive * 0.8 - 0.3))
+    // the fin on the inside of a turn spreads to brake, the outer one tucks in
+    readonly property real finTurn: -Math.max(-1, Math.min(1, turn * 1.2))
     // fold angle for the back half; negative so the tail trails to the outside of the turn
     readonly property real bendAng: -Math.max(-1.3, Math.min(1.3, turn * 1.5))
-    readonly property real swimAmp: len * (0.02 + 0.07 * drive)
+    readonly property real swimAmp: fullLen * (0.02 + 0.07 * drive)
     readonly property real shadowRoll: Math.random()
     readonly property bool glitchShadow: shadowRoll > 0.82
     readonly property vector4d shadowTint: glitchShadow ? Qt.vector4d(0, 0, 0, 0)
@@ -103,9 +117,16 @@ Item {
         // where it wants to head drifts smoothly (no per-frame randomness), and the turning
         // speed eases toward what's needed, so turns build up and settle like a real fish
         baseAngle += (0.16 * Math.sin(pond.t * 0.07 + seedA) + 0.09 * Math.sin(pond.t * 0.19 + seedB)) * dt;
-        const target = baseAngle + Math.sin(wanderT) * 0.8;
+        // the big fish only ever make gentle, short turns: where they want to go can't run far
+        // ahead of where they're facing, so they never swing round in one huge arc
+        if (big) {
+            const lead = Math.atan2(Math.sin(baseAngle - angle), Math.cos(baseAngle - angle));
+            baseAngle = angle + Math.max(-0.5, Math.min(0.5, lead));
+        }
+        const target = baseAngle + Math.sin(wanderT) * (big ? 0.3 : 0.8);
         const diff = Math.atan2(Math.sin(target - angle), Math.cos(target - angle));
-        const want = Math.max(-1.1, Math.min(1.1, diff * 1.1));
+        const maxTurn = big ? 0.3 : 1.1;
+        const want = Math.max(-maxTurn, Math.min(maxTurn, diff * 1.1));
         turn += (want - turn) * (1 - Math.exp(-dt / 0.55));
         angle += turn * dt;
 
@@ -122,7 +143,9 @@ Item {
 
         // the tail beats while driving and almost stops while gliding
         swimPhase += dt * (1.4 + 4.6 * drive) * Math.sqrt(pond.fishSpeed) * (big ? 0.6 : 1);
-        const v = speed * pond.fishSpeed * pond.unit / pond.fishSize * (big ? 0.85 : 1) * k;
+        // each stroke of the tail gives a little surge forward
+        const surge = 1 + 0.15 * drive * Math.sin(2 * swimPhase);
+        const v = speed * surge * pond.fishSpeed * pond.unit / pond.fishSize * (big ? 0.85 : 1) * k;
         fx += Math.cos(angle) * v;
         fy += Math.sin(angle) * v;
         if (fx < -wrap) fx = pond.width + wrap; else if (fx > pond.width + wrap) fx = -wrap;
@@ -136,6 +159,7 @@ Item {
 
     Item {
         rotation: fish.deg + fish.yaw
+        scale: fish.depthScale
         Image {
             id: bodyTex
             source: pond.img + "fish/f" + fish.type + "_" + fish.pal + ".png"
@@ -157,7 +181,11 @@ Item {
             property real itemH: height
             property vector4d tint: Qt.vector4d(0, 0, 0, 0)
             property real glitchy: 0
-            mesh: GridMesh { resolution: Qt.size(4, 32) }
+            property real bodyHalf: fish.fullLen * 0.1
+            property real flow: fish.flow
+            property real fold: fish.finFold
+            property real finTurn: fish.finTurn
+            mesh: GridMesh { resolution: Qt.size(12, 32) }
             vertexShader: pond.shaders + "fish.vert"
             fragmentShader: pond.shaders + "fish.frag"
         }
@@ -174,6 +202,7 @@ Item {
         x: fish.fx + lx / ln * off
         y: fish.fy + ly / ln * off
         rotation: fish.deg + fish.yaw
+        scale: fish.depthScale
         opacity: 0.6 + fish.depth * 0.25
         Image {
             id: shadowTex
@@ -196,7 +225,11 @@ Item {
             property real itemH: height
             property vector4d tint: fish.shadowTint
             property real glitchy: fish.glitchShadow ? 1 : 0
-            mesh: GridMesh { resolution: Qt.size(4, 28) }
+            property real bodyHalf: fish.fullLen * 0.1
+            property real flow: fish.flow
+            property real fold: fish.finFold
+            property real finTurn: fish.finTurn
+            mesh: GridMesh { resolution: Qt.size(12, 28) }
             vertexShader: pond.shaders + "fish.vert"
             fragmentShader: pond.shaders + "fish.frag"
         }
