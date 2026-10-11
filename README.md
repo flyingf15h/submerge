@@ -21,11 +21,11 @@ behaves the same; see [Plasma 5 port](#plasma-5-port) for what changed underneat
 
 ## Install
 
-Grab `submerge-1.0-plasma5.tar.gz` from [Releases](../../releases), then:
+Grab `submerge-1.8-plasma5.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.0-plasma5.tar.gz
-cd submerge-1.0-plasma5
+tar xzf submerge-1.8-plasma5.tar.gz
+cd submerge-1.8-plasma5
 ./install.sh --apply
 ```
 
@@ -37,7 +37,7 @@ Global Theme. `./uninstall.sh` removes it. Needs Plasma 5.27.
 ```sh
 ./install.sh        # copies the shaders into the package and installs the wallpaper
 ./preview.py        # live preview window (PyQt5, or qmlscene if PyQt5 has no QML) that restarts whenever a file changes
-./build-dist.sh     # builds dist/submerge-<version>.tar.gz and the KDE Store archives
+./build-dist.sh     # builds dist/submerge-<version>-plasma5.tar.gz and the KDE Store archives
 ```
 
 `prep.py` regenerates the tinted fish and water images from the original art, and
@@ -100,7 +100,7 @@ are under Performance in the wallpaper settings:
 - **Lock screen:** in `~/.config/kscreenlockerrc` set `[Greeter] WallpaperPlugin=org.submerge.wallpaper`
   and `[Greeter][Wallpaper][org.submerge.wallpaper][General] LockScreen=true` (the lock screen
   hides every window, so the cover checks are skipped there). The HUD switches to a centred
-  layout: title and clock up top, CPU / memory / network / battery (with time left and power draw) along the bottom, and
+  layout: title and clock up top, CPU / memory / network / battery (time left on battery, charging or plugged in on AC, and power draw) along the bottom, and
   skips the sensors it doesn't show. The Breeze lock screen UI is drawn on top. The HUD already shows the time, so also set `[Greeter][LnF][General] alwaysShowClock=false`
   to drop Breeze's centre clock while the lock screen is idle (same as unticking "Keep visible
   when unlocking prompt disappears" under System Settings > Screen Locking > Appearance).

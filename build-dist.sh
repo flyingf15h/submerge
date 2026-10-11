@@ -3,7 +3,7 @@
 # theme (with splash) and fonts, plus install/uninstall scripts for whoever downloads it.
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION=1.0
+VERSION=1.8
 NAME=submerge-$VERSION-plasma5
 OUT=dist/$NAME
 # the fonts and their licence come from Debian's fonts-ibm-plex unless FONTS / FONT_LICENSE say

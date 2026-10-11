@@ -74,6 +74,10 @@ Item {
     readonly property string batteryState: charging ? (batteryLeft ? "CHARGING  ·  FULL " + batteryLeft : "CHARGING")
                                          : battery["State"] === "FullyCharged" ? "FULLY CHARGED"
                                          : discharging ? (batteryLeft ? batteryLeft + " LEFT" : "ON BATTERY") : "ON AC POWER"
+    // the lock screen's short version: say when it's plugged in (charging / full), else time left
+    readonly property string lockBatteryNote: charging ? "CHARGING"
+        : !discharging ? (battery["State"] === "FullyCharged" || batteryPct >= 99 ? "FULL  ·  PLUGGED IN" : "PLUGGED IN")
+        : batteryLeft ? batteryLeft + " LEFT" : "ON BATTERY"
     // time to empty (or to full while charging) from the battery's energy and a smoothed power
     // reading; the engine doesn't provide one here. Whole minutes, so it rarely redraws.
     readonly property string batteryLeft: {
@@ -501,7 +505,7 @@ Item {
         case "CPU":   return { v: Math.round(pct(cpu.value)) + "%", f: pct(cpu.value) / 100 };
         case "MEM":   return { v: Math.round(pct(mem.value)) + "%", f: pct(mem.value) / 100 };
         case "NET":   return { v: "↓ " + rate(down.value), f: Math.min(1, (down.value || 0) / 5242880) };
-        default:      return { v: Math.round(hud.batteryPct) + "%" + (hud.discharging && hud.batteryLeft ? "  ·  " + hud.batteryLeft : "")
+        default:      return { v: Math.round(hud.batteryPct) + "%  ·  " + hud.lockBatteryNote
                                   + (hud.powerText ? "  ·  " + hud.powerText : ""), f: hud.batteryPct / 100 };
         }
     }
