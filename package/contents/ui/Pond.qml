@@ -313,7 +313,7 @@ Item {
         readonly property real drive: Math.max(beat, Math.min(1, Math.abs(turn) * 0.8))
         readonly property real yaw: Math.sin(swimPhase + 0.6) * 2.8 * drive
         // fold angle for the back half; negative so the tail trails to the outside of the turn
-        readonly property real bendAng: -Math.max(-0.7, Math.min(0.7, turn * 0.9))
+        readonly property real bendAng: -Math.max(-1.3, Math.min(1.3, turn * 1.5))
         readonly property real swimAmp: len * (0.02 + 0.07 * drive)
         readonly property real shadowRoll: Math.random()
         readonly property bool glitchShadow: shadowRoll > 0.82
@@ -427,7 +427,7 @@ Item {
                 property real itemH: height
                 property vector4d tint: Qt.vector4d(0, 0, 0, 0)
                 property real glitchy: 0
-                mesh: GridMesh { resolution: Qt.size(2, 28) }
+                mesh: GridMesh { resolution: Qt.size(4, 32) }
                 vertexShader: pond.shaders + "fish.vert.qsb"
                 fragmentShader: pond.shaders + "fish.frag.qsb"
             }
@@ -466,7 +466,7 @@ Item {
                 property real itemH: height
                 property vector4d tint: fish.shadowTint
                 property real glitchy: fish.glitchShadow ? 1 : 0
-                mesh: GridMesh { resolution: Qt.size(2, 20) }
+                mesh: GridMesh { resolution: Qt.size(4, 28) }
                 vertexShader: pond.shaders + "fish.vert.qsb"
                 fragmentShader: pond.shaders + "fish.frag.qsb"
             }
@@ -516,24 +516,13 @@ Item {
             }
         }
 
-        // two drifting caustic layers, like the original site
-        Repeater {
-            model: 7
-            Image {
-                required property int index
-                anchors.fill: parent
-                source: pond.img + "water/c" + (index + 1) + ".png"
-                fillMode: Image.PreserveAspectCrop
-                readonly property real ph: (pond.t * 0.9) % 7
-                readonly property real d: Math.abs(((ph - index + 10.5) % 7) - 3.5)
-                opacity: Math.max(0, 1 - d) * 0.7
-            }
-        }
+        // two drifting caustic layers, like the original site. The art is a soft cyan that the
+        // saturated grade pulls toward the water's blue, so the lines are brightened and paled
+        // a little to keep the light visible
         Item {
             anchors.fill: parent
-            scale: 1.4
-            rotation: 12
-            opacity: 0.45
+            layer.enabled: true
+            layer.effect: MultiEffect { brightness: 0.35; saturation: -0.25 }
             Repeater {
                 model: 7
                 Image {
@@ -541,9 +530,27 @@ Item {
                     anchors.fill: parent
                     source: pond.img + "water/c" + (index + 1) + ".png"
                     fillMode: Image.PreserveAspectCrop
-                    readonly property real ph: (pond.t * 1.26 + 3.5) % 7
+                    readonly property real ph: (pond.t * 0.9) % 7
                     readonly property real d: Math.abs(((ph - index + 10.5) % 7) - 3.5)
-                    opacity: Math.max(0, 1 - d)
+                    opacity: Math.max(0, 1 - d) * 0.85
+                }
+            }
+            Item {
+                anchors.fill: parent
+                scale: 1.4
+                rotation: 12
+                opacity: 0.55
+                Repeater {
+                    model: 7
+                    Image {
+                        required property int index
+                        anchors.fill: parent
+                        source: pond.img + "water/c" + (index + 1) + ".png"
+                        fillMode: Image.PreserveAspectCrop
+                        readonly property real ph: (pond.t * 1.26 + 3.5) % 7
+                        readonly property real d: Math.abs(((ph - index + 10.5) % 7) - 3.5)
+                        opacity: Math.max(0, 1 - d)
+                    }
                 }
             }
         }
@@ -553,10 +560,21 @@ Item {
             anchors.fill: parent
             visible: pond.lights
             Image {
+                id: surfaceGlow
                 source: pond.img + "fx/light_surface.png"
                 width: pond.width * 1.1; height: width * 0.5
                 x: pond.width * 0.35 - width / 2 + Math.sin(pond.t * 0.05) * 40
                 y: -height * 0.45
+                visible: false
+            }
+            // the glow art is almost white, which washed the top of the screen out to grey,
+            // so it's tinted toward the water's blue
+            MultiEffect {
+                source: surfaceGlow
+                x: surfaceGlow.x; y: surfaceGlow.y
+                width: surfaceGlow.width; height: surfaceGlow.height
+                colorization: 0.62
+                colorizationColor: "#2a7dff"
                 opacity: 0.7
             }
             Repeater {
@@ -588,6 +606,13 @@ Item {
             property real aspect: pond.width / Math.max(1, pond.height)
             property real strength: 1.1
             fragmentShader: pond.shaders + "surface.frag.qsb"
+        }
+        // slow patches of golden sun and shade drifting through the water
+        ShaderEffect {
+            anchors.fill: parent
+            property real time: pond.t
+            property real aspect: pond.width / Math.max(1, pond.height)
+            fragmentShader: pond.shaders + "spots.frag.qsb"
         }
         // the water falls off into darkness toward the bottom of the screen
         Rectangle {
