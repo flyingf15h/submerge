@@ -14,6 +14,10 @@ layout(std140, binding = 0) uniform buf {
     float itemH;
     vec4 tint;
     float glitchy;
+    float bodyHalf;
+    float flow;
+    float fold;
+    float finTurn;
 };
 layout(binding = 1) uniform sampler2D source;
 void main() {
