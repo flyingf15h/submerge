@@ -25,11 +25,11 @@ Videos: [the wallpaper](store/demo/submerge-wallpaper.mp4) and [the whole theme]
 
 From the KDE Store: [global theme](https://store.kde.org/p/2377260/),
 [wallpaper](https://store.kde.org/p/2377252/), [panel style](https://store.kde.org/p/2377258/),
-[colour scheme](https://store.kde.org/p/2377259/). Or grab `submerge-1.7.tar.gz` from [Releases](../../releases), then:
+[colour scheme](https://store.kde.org/p/2377259/). Or grab `submerge-1.8.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.7.tar.gz
-cd submerge-1.7
+tar xzf submerge-1.8.tar.gz
+cd submerge-1.8
 ./install.sh --apply
 ```
 
@@ -67,7 +67,7 @@ For the sign-in screen (SDDM), the release has an `sddm` folder with Breeze's lo
 the pond. It installs system-wide, so it needs sudo:
 
 ```sh
-cd submerge-1.7/sddm
+cd submerge-1.8/sddm
 sudo ./install.sh            # undo with: sudo ./install.sh --remove
 ```
 

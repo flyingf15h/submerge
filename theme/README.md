@@ -23,8 +23,8 @@ A late-night koi pond for KDE Plasma 6, styled like a PS2-era game loading scree
 Needs KDE Plasma 6.
 
 ```sh
-tar xzf submerge-1.7.tar.gz
-cd submerge-1.7
+tar xzf submerge-1.8.tar.gz
+cd submerge-1.8
 ./install.sh --apply
 ```
 
