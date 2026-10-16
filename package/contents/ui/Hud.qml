@@ -85,6 +85,7 @@ Item {
     Sensors.Sensor { id: gpu; enabled: !hud.lockScreen; sensorId: "gpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
     Sensors.Sensor { id: mem; sensorId: "memory/physical/usedPercent"; updateRateLimit: Math.max(2000, hud.slow) }
     Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: Math.max(1500, hud.slow) }
+    Sensors.Sensor { id: up; enabled: !hud.lockScreen; sensorId: "network/all/upload"; updateRateLimit: Math.max(1500, hud.slow) }
     Sensors.Sensor { id: disk; enabled: !hud.lockScreen; sensorId: "disk/all/usedPercent"; updateRateLimit: Math.max(10000, hud.slow) }
     Sensors.Sensor { id: temp; enabled: !hud.lockScreen; sensorId: "cpu/all/averageTemperature"; updateRateLimit: Math.max(3000, hud.slow) }
     Sensors.Sensor { id: uptime; enabled: !hud.lockScreen; sensorId: "os/system/uptime"; updateRateLimit: Math.max(30000, hud.slow) }
@@ -225,7 +226,7 @@ Item {
                 { n: "01", en: "CPU",     sub: () => hud.topCpu ? "TOP: " + hud.topCpu : "TOTAL LOAD",  v: () => Math.round(hud.pct(cpu.value)) + "%",  f: () => hud.pct(cpu.value) / 100 },
                 { n: "02", en: "GPU",     sub: "RENDER LOAD", v: () => Math.round(hud.pct(gpu.value)) + "%",  f: () => hud.pct(gpu.value) / 100 },
                 { n: "03", en: "MEMORY",  sub: () => hud.topMem ? "TOP: " + hud.topMem : "PHYSICAL RAM",      v: () => Math.round(hud.pct(mem.value)) + "%",  f: () => hud.pct(mem.value) / 100 },
-                { n: "04", en: "NETWORK", sub: "DOWNLINK",  v: () => "↓ " + hud.rate(down.value),         f: () => Math.min(1, (down.value || 0) / 5242880) },
+                { n: "04", en: "NETWORK", sub: "DOWN / UPLINK", v: () => "↓ " + hud.rate(down.value), v2: () => "↑ " + hud.rate(up.value),         f: () => Math.min(1, (down.value || 0) / 5242880) },
                 { n: "05", en: "STORAGE", sub: "DISK USED",   v: () => Math.round(hud.pct(disk.value)) + "%", f: () => hud.pct(disk.value) / 100 }
             ].concat(hud.hasBattery ? [
                 { n: "06", en: "BATTERY", sub: () => hud.batteryState, v: () => Math.round(hud.batteryPct) + "%", f: () => hud.batteryPct / 100 }
@@ -283,14 +284,26 @@ Item {
                     Mono { text: row.modelData.en; font.pixelSize: 15 * hud.u; font.letterSpacing: 3.5 * hud.u }
                     Mono { text: { hud.topCpu; hud.topMem; hud.batteryState; const s = row.modelData.sub; return typeof s === "function" ? s() : s; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
                 }
-                Mono {
+                Column {
                     anchors.right: parent.right
                     anchors.rightMargin: 8 * hud.u
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: -3 * hud.u
-                    text: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return row.modelData.v(); }
-                    color: row.isBattery ? hud.batteryColor : row.high ? hud.hot : hud.ink
-                    font.pixelSize: 14 * hud.u
+                    spacing: 2 * hud.u
+                    Mono {
+                        anchors.right: parent.right
+                        text: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return row.modelData.v(); }
+                        color: row.isBattery ? hud.batteryColor : row.high ? hud.hot : hud.ink
+                        font.pixelSize: (row.modelData.v2 ? 12 : 14) * hud.u
+                    }
+                    // second readout under the first (upload under download)
+                    Mono {
+                        visible: !!row.modelData.v2
+                        anchors.right: parent.right
+                        text: { up.value; return row.modelData.v2 ? row.modelData.v2() : ""; }
+                        font.pixelSize: 12 * hud.u
+                        opacity: 0.9
+                    }
                 }
                 // baseline doubles as a level meter
                 Rectangle {
