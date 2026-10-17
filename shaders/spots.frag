@@ -34,7 +34,7 @@ vec4 patches(vec2 p, out float shade) {
         float r = (0.22 + 0.09 * fract(seed * 1.7)) * (1.0 + 0.14 * sin(a * 2.0 + time * 0.06 + seed)
                                                           + 0.05 * sin(a * 5.0 - time * 0.05 + seed * 2.0));
         float m = exp(-dot(d, d) / (r * r)) * life;
-        if (i % 2 == 1) {
+        if (mod(f, 2.0) > 0.5) {  // odd patches are shade (no int % in GLSL ES 1.00)
             shade += m;
         } else {
             vec3 gold = mix(vec3(1.0, 0.74, 0.26), vec3(1.0, 0.85, 0.45), fract(seed));

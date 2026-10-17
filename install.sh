@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 for f in shaders/*.vert shaders/*.frag; do
     uv run -q --no-project --with "PySide6-Addons==6.10.*" python -c \
         'import os,sys,PySide6;os.execv(os.path.join(os.path.dirname(PySide6.__file__),"qsb"),["qsb"]+sys.argv[1:])' \
-        --glsl "120,150" --hlsl 50 --msl 12 -o "package/contents/shaders/$(basename "$f").qsb" "$f"
+        --glsl "100 es,120,150" --hlsl 50 --msl 12 -o "package/contents/shaders/$(basename "$f").qsb" "$f"
 done
 [ "${1:-}" = "--compile-only" ] && exit 0
 # the plugin used to be called org.stillwaters.pond
