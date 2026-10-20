@@ -1,6 +1,6 @@
 # Submerge
 
-A deep ocean koi fish theme for KDE Plasma 5 and 6. The wallpaper is animated and has a HUD
+A cyber/ deep ocean koi theme for KDE Plasma 5 and 6. The wallpaper is animated and has a HUD
 for the clock and system stats, and it comes with a matching panel style, colour scheme and
 splash screen.
 
