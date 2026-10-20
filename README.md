@@ -39,7 +39,7 @@ Global Theme. `./uninstall.sh` removes it. Needs Plasma 6.
 ## From source
 
 ```sh
-./install.sh        # recompiles shaders (needs uv) and installs the wallpaper
+./install.sh        # recompiles shaders (needs uv; skipped if uv is missing) and installs the wallpaper
 ./preview.py        # live preview window that restarts whenever a file changes
 ./build-dist.sh     # builds dist/submerge-<version>.tar.gz and the KDE Store archives
 ```
