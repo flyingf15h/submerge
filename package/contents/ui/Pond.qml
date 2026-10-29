@@ -60,7 +60,7 @@ Item {
     readonly property bool batteryHold: freezeOnBattery && onBattery && !lockScreen && watcherReady
                                         && coverLoader.item.hasWindows && unfocused
     readonly property bool active: running && visible && !covered && !batteryHold
-    readonly property bool lowPower: (slowWhenUnfocused && unfocused && !lockScreen) || (slowOnBattery && onBattery)
+    readonly property bool lowPower: (slowWhenUnfocused && unfocused && !lockScreen) || (slowOnBattery && onBattery && !lockScreen)
     readonly property real liveFps: lowPower ? Math.min(fps, lowFps) : fps
 
     readonly property url img: Qt.resolvedUrl("../images/")
