@@ -28,7 +28,7 @@ Kirigami.FormLayout {
 
     QQC2.CheckBox { id: hud; Kirigami.FormData.label: "Loading screen:"; text: "Show menu and readouts" }
     QQC2.TextField { id: title; Kirigami.FormData.label: "Title:"; enabled: hud.checked }
-    QQC2.TextField { id: player; Kirigami.FormData.label: "User name:"; enabled: hud.checked }
+    QQC2.TextField { id: player; Kirigami.FormData.label: "User name:"; placeholderText: "your account name"; enabled: hud.checked }
     QQC2.SpinBox { id: textScale; Kirigami.FormData.label: "Text size (%):"; from: 60; to: 200; stepSize: 10; enabled: hud.checked }
 
     QQC2.CheckBox { id: pauseCovered; Kirigami.FormData.label: "Performance:"; text: "Pause when a maximized window covers the desktop" }

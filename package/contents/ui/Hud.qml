@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Effects
 import org.kde.ksysguard.sensors as Sensors
 import org.kde.plasma.plasma5support as P5Support
@@ -9,7 +10,8 @@ Item {
     id: hud
 
     property string title: "SUBMERGE"
-    property string player: "GUEST"
+    // blank means the logged-in account's name
+    property string player: ""
     property real t: 0
     property real mouseX: -9999
     property real mouseY: -9999
@@ -23,7 +25,15 @@ Item {
     property bool lockScreen: false
     readonly property int slow: paused ? 60000 : lowPower ? 5000 : 1
 
-    readonly property real u: height / 1080 * textScale
+    // grow the HUD on physically small screens: sized only by pixel height, a 14" laptop draws
+    // it at the same fraction of the screen as a 27" monitor, which makes the text tiny.
+    // 300 mm is roughly the height of a 24" monitor; smaller panels scale up to keep the same physical text size, capped at 1.42x
+    readonly property real physScale: {
+        const d = Screen.pixelDensity, mm = d > 0 ? Screen.height / d : 0;
+        return mm > 50 && isFinite(mm) ? Math.max(1, Math.min(1.42, 300 / mm)) : 1;
+    }
+    // never so big that the readouts run into the status block (the left column needs ~940u with breathing room)
+    readonly property real u: Math.min(height / 1080 * physScale, height / 940) * textScale
     readonly property color ink: "#eef4ff"
     readonly property color line: "#a9c2ff"
     readonly property color hot: "#ff9a4d"
@@ -87,11 +97,60 @@ Item {
     Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: Math.max(1500, hud.slow) }
     Sensors.Sensor { id: up; enabled: !hud.lockScreen; sensorId: "network/all/upload"; updateRateLimit: Math.max(1500, hud.slow) }
     Sensors.Sensor { id: disk; enabled: !hud.lockScreen; sensorId: "disk/all/usedPercent"; updateRateLimit: Math.max(10000, hud.slow) }
-    Sensors.Sensor { id: temp; enabled: !hud.lockScreen; sensorId: "cpu/all/averageTemperature"; updateRateLimit: Math.max(3000, hud.slow) }
     Sensors.Sensor { id: uptime; enabled: !hud.lockScreen; sensorId: "os/system/uptime"; updateRateLimit: Math.max(30000, hud.slow) }
     Sensors.Sensor { id: host; sensorId: "os/system/hostname" }
     Sensors.Sensor { id: plasma; sensorId: "os/plasma/plasmaVersion" }
-    Sensors.Sensor { id: kernel; sensorId: "os/kernel/prettyName" }
+    Sensors.Sensor { id: distro; sensorId: "os/system/prettyName" }
+
+    // account name for the USER line when none is set
+    property string account: ""
+    readonly property string accountCmd: "n=$(getent passwd \"$USER\" | cut -d: -f5 | cut -d, -f1); echo \"${n:-$USER}\""
+    // integrated GPU load when there's no discrete GPU (the gpu sensor reads 0 on Intel iGPUs)
+    property real igpu: -1
+    readonly property string igpuCmd: script("igpu.sh")
+    readonly property real gpuLoad: igpu >= 0 ? igpu : pct(gpu.value)
+    function script(name) { return "sh '" + Qt.resolvedUrl("../code/" + name).toString().replace(/^file:\/\//, "") + "'"; }
+    // CPU package temperature read live from hwmon (the ksysguard temperature sensors come up
+    // empty on some machines)
+    property real coreTemp: 0
+    readonly property string tempCmd: script("cputemp.sh")
+    P5Support.DataSource {
+        engine: "executable"
+        connectedSources: hud.visible && !hud.lockScreen ? [hud.tempCmd] : []
+        interval: Math.max(hud.lowPower ? 5000 : 2000, hud.slow)
+        onNewData: (source, data) => { const v = parseFloat((data.stdout || "").trim()); hud.coreTemp = isNaN(v) ? 0 : v; }
+    }
+    // pending updates, security updates and CPU vulnerabilities; the package check is slow-ish,
+    // so only every 30 minutes
+    property int updates: -1
+    property int securityUpdates: -1
+    property int vulns: 0
+    readonly property bool issues: updates > 0 || vulns > 0
+    readonly property string statusCmd: script("sysstatus.sh")
+    P5Support.DataSource {
+        engine: "executable"
+        connectedSources: hud.visible && !hud.lockScreen ? [hud.statusCmd] : []
+        interval: 30 * 60000
+        onNewData: (source, data) => {
+            const f = (data.stdout || "").trim().split(/\s+/).map(Number);
+            if (f.length < 3 || f.some(isNaN)) return;
+            hud.updates = f[0]; hud.securityUpdates = f[1]; hud.vulns = f[2];
+        }
+    }
+    P5Support.DataSource {
+        engine: "executable"
+        connectedSources: [hud.accountCmd]
+        onNewData: (source, data) => { hud.account = (data.stdout || "").trim(); disconnectSource(source); }
+    }
+    P5Support.DataSource {
+        engine: "executable"
+        connectedSources: hud.visible && !hud.paused && !hud.lockScreen ? [hud.igpuCmd] : []
+        interval: Math.max(hud.lowPower ? 5000 : 2000, hud.slow)
+        onNewData: (source, data) => {
+            const v = parseFloat((data.stdout || "").trim());
+            hud.igpu = isNaN(v) ? -1 : Math.max(0, Math.min(100, v));
+        }
+    }
 
     // which app is using the most CPU and memory (processes with the same name added together)
     property string topCpu: ""
@@ -180,7 +239,7 @@ Item {
             font.pixelSize: 11 * hud.u
             opacity: 0.95
         }
-        Item { width: 1; height: 18 * hud.u }
+        Item { width: 1; height: 14 * hud.u }
 
         // tall, thin, widely spaced title
         Item {
@@ -192,12 +251,12 @@ Item {
                 color: hud.ink
                 font.family: hud.cond
                 font.weight: Font.Light
-                font.pixelSize: 66 * hud.u
+                font.pixelSize: 54 * hud.u
                 font.letterSpacing: 9 * hud.u
                 transform: Scale { yScale: 1.45 }
             }
         }
-        Item { width: 1; height: 14 * hud.u }
+        Item { width: 1; height: 10 * hud.u }
 
         // big clock
         Row {
@@ -207,7 +266,7 @@ Item {
                 color: hud.ink
                 font.family: hud.cond
                 font.weight: Font.ExtraLight
-                font.pixelSize: 44 * hud.u
+                font.pixelSize: 36 * hud.u
                 font.letterSpacing: 4 * hud.u
             }
             Column {
@@ -217,14 +276,14 @@ Item {
                 Mono { text: (hud.paused ? "" : ":" + Qt.formatDateTime(hud.now, "ss") + "   ") + "UP " + hud.span(uptime.value); font.pixelSize: 10 * hud.u; opacity: 0.9 }
             }
         }
-        Item { width: 1; height: 40 * hud.u }
+        Item { width: 1; height: 30 * hud.u }
 
         // live readouts, laid out like the menu in the video
         Repeater {
             id: rows
             model: [
                 { n: "01", en: "CPU",     sub: () => hud.topCpu ? "TOP: " + hud.topCpu : "TOTAL LOAD",  v: () => Math.round(hud.pct(cpu.value)) + "%",  f: () => hud.pct(cpu.value) / 100 },
-                { n: "02", en: "GPU",     sub: "RENDER LOAD", v: () => Math.round(hud.pct(gpu.value)) + "%",  f: () => hud.pct(gpu.value) / 100 },
+                { n: "02", en: "GPU",     sub: "RENDER LOAD", v: () => Math.round(hud.gpuLoad) + "%",  f: () => hud.gpuLoad / 100 },
                 { n: "03", en: "MEMORY",  sub: () => hud.topMem ? "TOP: " + hud.topMem : "PHYSICAL RAM",      v: () => Math.round(hud.pct(mem.value)) + "%",  f: () => hud.pct(mem.value) / 100 },
                 { n: "04", en: "NETWORK", sub: "DOWN / UPLINK", v: () => "↓ " + hud.rate(down.value), v2: () => "↑ " + hud.rate(up.value),         f: () => Math.min(1, (down.value || 0) / 5242880) },
                 { n: "05", en: "STORAGE", sub: "DISK USED",   v: () => Math.round(hud.pct(disk.value)) + "%", f: () => hud.pct(disk.value) / 100 }
@@ -236,8 +295,8 @@ Item {
                 required property var modelData
                 required property int index
                 width: 360 * hud.u
-                height: 58 * hud.u
-                readonly property real level: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return modelData.f(); }
+                height: 66 * hud.u
+                readonly property real level: { cpu.value; hud.gpuLoad; mem.value; down.value; disk.value; hud.batteryPct; return modelData.f(); }
                 readonly property bool isBattery: modelData.en === "BATTERY"
                 readonly property bool high: !isBattery && level > 0.85
                 // colour of the value and level bar: battery goes green / orange / red
@@ -259,7 +318,7 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.bottomMargin: 6 * hud.u
+                    anchors.bottomMargin: 14 * hud.u
                     opacity: row.shownLit
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
@@ -271,7 +330,7 @@ Item {
                     width: 24 * hud.u; height: 20 * hud.u
                     x: 4 * hud.u
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: -3 * hud.u
+                    anchors.verticalCenterOffset: -7 * hud.u
                     color: "transparent"
                     border.color: hud.line; border.width: Math.max(1, hud.u)
                     Mono { anchors.centerIn: parent; text: row.modelData.n; font.pixelSize: 8 * hud.u; font.letterSpacing: 0.5 * hud.u }
@@ -279,7 +338,7 @@ Item {
                 Column {
                     x: 44 * hud.u
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: -3 * hud.u
+                    anchors.verticalCenterOffset: -7 * hud.u
                     spacing: 3 * hud.u
                     Mono { text: row.modelData.en; font.pixelSize: 15 * hud.u; font.letterSpacing: 3.5 * hud.u }
                     Mono { text: { hud.topCpu; hud.topMem; hud.batteryState; const s = row.modelData.sub; return typeof s === "function" ? s() : s; } font.pixelSize: 10 * hud.u; font.letterSpacing: 1.6 * hud.u; opacity: 0.9 }
@@ -288,11 +347,11 @@ Item {
                     anchors.right: parent.right
                     anchors.rightMargin: 8 * hud.u
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: -3 * hud.u
+                    anchors.verticalCenterOffset: -7 * hud.u
                     spacing: 2 * hud.u
                     Mono {
                         anchors.right: parent.right
-                        text: { cpu.value; gpu.value; mem.value; down.value; disk.value; hud.batteryPct; return row.modelData.v(); }
+                        text: { cpu.value; hud.gpuLoad; mem.value; down.value; disk.value; hud.batteryPct; return row.modelData.v(); }
                         color: row.isBattery ? hud.batteryColor : row.high ? hud.hot : hud.ink
                         font.pixelSize: (row.modelData.v2 ? 12 : 14) * hud.u
                     }
@@ -327,11 +386,27 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 64 * hud.u
         spacing: 4 * hud.u
-        Mono { text: "// SYSTEM STATUS"; font.pixelSize: 10 * hud.u; opacity: 0.95 }
+        // battery-orange when there are updates waiting or the CPU has unmitigated vulnerabilities
+        Mono { text: "// SYSTEM STATUS"; color: hud.issues ? hud.hot : hud.ink; font.pixelSize: 10 * hud.u; opacity: 0.95 }
         Mono {
+            visible: hud.busy || !hud.issues
             text: hud.busy ? "HIGH LOAD" : "ALL SYSTEMS NOMINAL"
             color: hud.busy ? hud.hot : hud.ink
             font.pixelSize: 10 * hud.u
+        }
+        Mono {
+            visible: hud.updates >= 0
+            text: hud.updates === 0 ? "SYSTEM UP TO DATE"
+                : hud.updates + (hud.updates === 1 ? " UPDATE" : " UPDATES") + " PENDING"
+                  + (hud.securityUpdates > 0 ? "  ·  " + hud.securityUpdates + " SECURITY" : "")
+            color: hud.updates > 0 ? hud.hot : hud.ink
+            font.pixelSize: 10 * hud.u; opacity: 0.95
+        }
+        Mono {
+            visible: hud.vulns > 0
+            text: hud.vulns + " UNMITIGATED CPU " + (hud.vulns === 1 ? "VULNERABILITY" : "VULNERABILITIES")
+            color: hud.hot
+            font.pixelSize: 10 * hud.u; opacity: 0.95
         }
         Item { width: 1; height: 6 * hud.u }
         Row {
@@ -352,7 +427,7 @@ Item {
             }
             Column {
                 spacing: 4 * hud.u
-                Mono { text: "CORE " + (temp.value ? Math.round(temp.value) + "°C" : "--"); font.pixelSize: 10 * hud.u; opacity: 0.95 }
+                Mono { text: "CORE " + (hud.coreTemp ? Math.round(hud.coreTemp) + "°C" : "--"); font.pixelSize: 10 * hud.u; opacity: 0.95 }
                 Item {
                     width: 160 * hud.u; height: 6 * hud.u
                     Rectangle {
@@ -362,8 +437,8 @@ Item {
                     Rectangle {
                         x: 2 * hud.u; y: 2 * hud.u
                         height: Math.max(1, parent.height - 4 * hud.u)
-                        width: (parent.width - 4 * hud.u) * Math.max(0.03, Math.min(1, ((temp.value || 30) - 30) / 70))
-                        color: (temp.value || 0) > 85 ? hud.hot : hud.ink
+                        width: (parent.width - 4 * hud.u) * Math.max(0.03, Math.min(1, ((hud.coreTemp || 30) - 30) / 70))
+                        color: hud.coreTemp > 85 ? hud.hot : hud.ink
                     }
                 }
             }
@@ -378,18 +453,18 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 64 * hud.u
         spacing: 4 * hud.u
-        Mono { anchors.right: parent.right; text: (kernel.value || "").toString().toUpperCase(); font.pixelSize: 10 * hud.u; opacity: 0.9 }
-        Mono { anchors.right: parent.right; text: "USER: " + hud.player.toUpperCase() }
+        Mono { anchors.right: parent.right; text: (distro.value || "").toString().toUpperCase(); font.pixelSize: 10 * hud.u; opacity: 0.9 }
+        Mono { anchors.right: parent.right; text: "USER: " + (hud.player.trim() || hud.account || "GUEST").toUpperCase() }
         Row {
             anchors.right: parent.right
             spacing: 8 * hud.u
-            Mono { text: "SESSION: 01" }
             Rectangle {
                 width: 7 * hud.u; height: width
                 anchors.verticalCenter: parent.verticalCenter
                 color: hud.ink
                 opacity: Math.sin(hud.t * 3) > 0 ? 0.95 : 0.2
             }
+            Mono { text: "MADE BY: FLYINGF15H" }
         }
     }
 

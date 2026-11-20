@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Effects
 
 // Tank-monitoring overlay: one specimen box that locks onto a fish (the one nearest the cursor
@@ -17,7 +18,14 @@ Item {
     readonly property bool pointing: mouseX > -9000
     readonly property int slowT: Math.floor(t)
 
-    readonly property real u: height / 1080 * textScale
+    // grow the HUD on physically small screens: sized only by pixel height, a 14" laptop draws
+    // it at the same fraction of the screen as a 27" monitor, which makes the text tiny.
+    // 300 mm is roughly the height of a 24" monitor; smaller panels scale up to keep the same physical text size, capped at 1.42x
+    readonly property real physScale: {
+        const d = Screen.pixelDensity, mm = d > 0 ? Screen.height / d : 0;
+        return mm > 50 && isFinite(mm) ? Math.max(1, Math.min(1.42, 300 / mm)) : 1;
+    }
+    readonly property real u: height / 1080 * textScale * physScale
     readonly property color ink: "#e6efff"
     readonly property color line: "#9fbaff"
     readonly property string mono: "IBM Plex Mono"

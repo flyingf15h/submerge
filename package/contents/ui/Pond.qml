@@ -23,7 +23,7 @@ Item {
     property bool filmLook: true
     property bool hud: true
     property string title: "SUBMERGE"
-    property string player: "GUEST"
+    property string player: ""
     property real textScale: 1.0
     property bool running: true
     property bool pauseWhenCovered: true
