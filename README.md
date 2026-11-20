@@ -36,6 +36,9 @@ cd submerge-2.0
 Without `--apply` it only installs; pick **Submerge** under System Settings > Colours & Themes >
 Global Theme. `./uninstall.sh` removes it. Needs Plasma 6.
 
+`./install.sh --apply` saves your prior settings in `~/.local/share/submerge-backup` without
+changing your panels. `./uninstall.sh` restores that backup before removing the theme files.
+
 ## From source
 
 ```sh

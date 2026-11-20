@@ -42,6 +42,9 @@ the number of fish, size, speed, title, user name, and turn off any of the effec
 ./uninstall.sh
 ```
 
+`./install.sh --apply` saves your prior settings in `~/.local/share/submerge-backup` without
+changing your panels. `./uninstall.sh` restores that backup before removing the theme files.
+
 ## Credits
 
 Fish, water and caustic artwork by flyingf15h, from
