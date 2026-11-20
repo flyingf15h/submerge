@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 
 // Tank-monitoring overlay: one specimen box that locks onto a fish (the one nearest the cursor
 // when the cursor is on the desktop, otherwise a random one every so often), a depth ruler
@@ -16,7 +17,12 @@ Item {
     readonly property bool pointing: mouseX > -9000
     readonly property int slowT: Math.floor(t)
 
-    readonly property real u: height / 1080 * textScale
+    // same physical-size scaling as the HUD
+    readonly property real physScale: {
+        const d = Screen.pixelDensity, mm = d > 0 ? Screen.height / d : 0;
+        return mm > 50 && isFinite(mm) ? Math.max(1, Math.min(1.42, 300 / mm)) : 1;
+    }
+    readonly property real u: height / 1080 * textScale * physScale
     readonly property color ink: "#e6efff"
     readonly property color line: "#9fbaff"
     readonly property string mono: "IBM Plex Mono"

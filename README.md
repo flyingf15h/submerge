@@ -21,11 +21,11 @@ behaves the same; see [Plasma 5 port](#plasma-5-port) for what changed underneat
 
 ## Install
 
-Grab `submerge-1.8-plasma5.tar.gz` from [Releases](../../releases), then:
+Grab `submerge-2.0-plasma5.tar.gz` from [Releases](../../releases), then:
 
 ```sh
-tar xzf submerge-1.8-plasma5.tar.gz
-cd submerge-1.8-plasma5
+tar xzf submerge-2.0-plasma5.tar.gz
+cd submerge-2.0-plasma5
 ./install.sh --apply
 ```
 

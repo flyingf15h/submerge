@@ -22,7 +22,7 @@ Item {
     property bool filmLook: true
     property bool hud: true
     property string title: "SUBMERGE"
-    property string player: "GUEST"
+    property string player: ""
     property real textScale: 1.0
     property bool running: true
     // 0 = every screen refresh. The desktop only animates on AC, so it runs at the refresh rate;

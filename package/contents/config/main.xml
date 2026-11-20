@@ -14,7 +14,7 @@
     <entry name="FilmLook" type="Bool"><default>true</default></entry>
     <entry name="Hud" type="Bool"><default>true</default></entry>
     <entry name="Title" type="String"><default>SUBMERGE</default></entry>
-    <entry name="Player" type="String"><default>GUEST</default></entry>
+    <entry name="Player" type="String"><default></default></entry>
     <entry name="TextScale" type="Int"><default>100</default></entry>
     <entry name="PauseWhenCovered" type="Bool"><default>true</default></entry>
     <entry name="PauseOnBattery" type="Bool"><default>false</default></entry>

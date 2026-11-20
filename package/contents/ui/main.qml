@@ -28,7 +28,7 @@ Item {
     property var acPlugged
     readonly property bool usingBattery: !!battery["Has Battery"] && (battery["State"] === "Discharging" || acPlugged === false)
     // on battery the pond either holds a still frame or keeps swimming at 15 fps
-    readonly property bool lowPower: usingBattery && cfg.PauseOnBattery
+    readonly property bool lowPower: usingBattery && cfg.PauseOnBattery && !cfg.LockScreen
 
     // ---- which screens are worth animating ----
     // A maximized or fullscreen window covers the whole pond on its screen, so that screen holds a
@@ -128,10 +128,11 @@ Item {
         title: cfg.Title
         player: cfg.Player
         textScale: cfg.TextScale / 100
-        // the screen's refresh rate on AC, 15 fps on battery (same visuals)
-        maxFps: root.usingBattery ? 15 : 0
+        // the screen's refresh rate on AC, 15 fps on battery (same visuals); the lock screen keeps
+        // full rate so the swim cycle stays smooth
+        maxFps: root.usingBattery && !cfg.LockScreen ? 15 : 0
         // the HUD's sensors and clock slow down on battery either way
-        lowPower: root.usingBattery
+        lowPower: root.usingBattery && !cfg.LockScreen
         lockScreen: cfg.LockScreen
         trackCursor: !root.usingBattery
         running: root.visible && !root.lowPower && !cfg.Paused
