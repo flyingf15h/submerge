@@ -3,18 +3,21 @@
 # theme (with splash) and fonts, plus install/uninstall scripts for whoever downloads it.
 set -euo pipefail
 cd "$(dirname "$0")"
+# other distros: FONTS_DIR=/path/to/IBMPlex/ttf FONTS_LICENSE=/path/to/LICENSE SKIP_SHADERS=1 ./build-dist.sh
+FONTS_DIR="${FONTS_DIR:-/usr/share/fonts/truetype/ibm-plex}"
+FONTS_LICENSE="${FONTS_LICENSE:-/usr/share/doc/fonts-ibm-plex/copyright}"
 VERSION=2.0
 OUT=dist/submerge-$VERSION
 rm -rf "$OUT" && mkdir -p "$OUT"/{wallpaper,desktoptheme,look-and-feel,color-schemes,fonts}
 
-./install.sh --compile-only
+[ -n "${SKIP_SHADERS:-}" ] || ./install.sh --compile-only
 cp -r package "$OUT/wallpaper/org.submerge.wallpaper"
 python3 plasma-style/build.py "$OUT/desktoptheme/submerge" >/dev/null
 cp -r theme/look-and-feel/org.submerge.desktop "$OUT/look-and-feel/"
 cp plasma-style/colors "$OUT/color-schemes/Submerge.colors"
-cp /usr/share/fonts/truetype/ibm-plex/IBMPlexMono-{Light,Regular,Medium}.ttf \
-   /usr/share/fonts/truetype/ibm-plex/IBMPlexSansCondensed-{ExtraLight,Light,Regular}.ttf "$OUT/fonts/"
-cp /usr/share/doc/fonts-ibm-plex/copyright "$OUT/fonts/IBM-Plex-LICENSE.txt"
+cp "$FONTS_DIR"/IBMPlexMono-{Light,Regular,Medium}.ttf \
+   "$FONTS_DIR"/IBMPlexSansCondensed-{ExtraLight,Light,Regular}.ttf "$OUT/fonts/"
+cp "$FONTS_LICENSE" "$OUT/fonts/IBM-Plex-LICENSE.txt"
 
 # previews shown in System Settings
 python3 - "$OUT" <<'PY'
