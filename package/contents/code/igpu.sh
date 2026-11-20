@@ -1,7 +1,7 @@
 #!/bin/sh
-# Render load of an Intel integrated GPU, for machines with no discrete GPU
-# (ksystemstats reports 0 for Intel iGPUs). Prints nothing if a non-Intel GPU is present
-# or no idle counter is found, so the HUD falls back to the regular sensor.
+# Render load of an Intel integrated GPU, read from its idle counter (ksystemstats reports 0 there).
+# Other cards are skipped: on hybrid laptops the gpu sensor polls nvidia-smi, which keeps the dGPU awake.
+# Prints nothing if no idle counter is found, so the HUD falls back to the regular sensor.
 f=
 for c in /sys/class/drm/card[0-9]*; do
     [ -e "$c/device/driver" ] || continue
@@ -11,7 +11,7 @@ for c in /sys/class/drm/card[0-9]*; do
                 case "$(cat "$g/name" 2>/dev/null)" in *-rc) f="$g/idle_residency_ms" ;; esac
             done ;;
         i915) [ -r "$c/gt/gt0/rc6_residency_ms" ] && f="$c/gt/gt0/rc6_residency_ms" ;;
-        *) exit 0 ;;
+        *) continue ;;
     esac
 done
 [ -n "$f" ] || exit 0
