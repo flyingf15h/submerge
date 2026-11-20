@@ -20,6 +20,7 @@ cp "$FONTS_DIR"/IBMPlexMono-{Light,Regular,Medium}.ttf \
 cp "$FONTS_LICENSE" "$OUT/fonts/IBM-Plex-LICENSE.txt"
 
 # previews shown in System Settings
+mkdir -p "$OUT/look-and-feel/org.submerge.desktop/contents/previews"
 python3 - "$OUT" <<'PY'
 import sys
 from PIL import Image
