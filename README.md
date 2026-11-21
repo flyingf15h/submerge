@@ -74,6 +74,14 @@ cd submerge-2.0/sddm
 sudo ./install.sh            # undo with: sudo ./install.sh --remove
 ```
 
+For Plasma Login Manager (Plasma 6.8), use the `plasmalogin` folder. The HUD stays off on the
+login screen; if you save a wallpaper in System Settings > Login Screen, Plasma replaces the pond.
+
+```sh
+cd submerge-2.0/plasmalogin
+sudo ./install.sh            # undo with: sudo ./install.sh --remove
+```
+
 ## Plasma 5
 
 [darshg321](https://github.com/darshg321) ported Submerge to Plasma 5.27 on the

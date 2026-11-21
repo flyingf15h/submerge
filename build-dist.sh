@@ -136,6 +136,7 @@ chmod +x "$OUT/install.sh" "$OUT/uninstall.sh"
 cp theme/README.md "$OUT/README.md"
 cp LICENSE ART-LICENSE.md "$OUT/"
 cp -r sddm "$OUT/sddm"
+cp -r plasmalogin "$OUT/plasmalogin"
 tar -C dist -czf "dist/submerge-$VERSION.tar.gz" "submerge-$VERSION"
 
 # separate archives for the KDE Store, one per item
