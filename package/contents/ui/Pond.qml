@@ -90,7 +90,8 @@ Item {
     // when Plasma reloads. They decide the mix of fish: warm water brings out goldfish, acidic
     // water the teal/green koi, alkaline water the violet ones, low oxygen more babies, and
     // strong flow makes everyone swim a little faster.
-    Sensors.Sensor { id: uptimeSensor; sensorId: "os/system/uptime" }
+    // with the HUD off, leave the sensor id empty: setting one starts ksystemstats over D-Bus
+    Sensors.Sensor { id: uptimeSensor; enabled: pond.hud; sensorId: pond.hud ? "os/system/uptime" : "" }
     property var cond: null
     readonly property bool ready: cond !== null
     function rollConditions(seed) {
@@ -116,6 +117,7 @@ Item {
         interval: 200; repeat: true; running: !pond.ready
         property int tries: 0
         onTriggered: {
+            if (!uptimeSensor.enabled) { pond.rollConditions(Math.floor(Date.now() / 86400000)); return; }
             const up = Number(uptimeSensor.value);
             if (up > 0) pond.rollConditions(Math.floor((Date.now() / 1000 - up) / 60));
             else if (++tries > 20) pond.rollConditions(Math.floor(Date.now() / 86400000));
@@ -218,8 +220,8 @@ Item {
             const now = Date.now();
             const dt = last ? Math.min((now - last) / 1000, 0.1) : interval / 1000;
             last = now;
-            cyberLayer.tick(dt);
-            hudLayer.step(dt);
+            cyberLoader.item?.tick(dt);
+            hudLoader.item?.step(dt);
             if (pond.ripples) pond.stepSim();
             pond.t += dt;
             for (let i = 0; i < fishRep.count; i++) fishRep.itemAt(i)?.step(dt);
@@ -719,34 +721,42 @@ Item {
             }
         }
 
-        Cyber {
-            id: cyberLayer
+        Loader {
+            id: cyberLoader
+            active: pond.hud
             anchors.fill: parent
             anchors.bottomMargin: pond.bottomInset
-            visible: pond.hud
-            fishItems: fishRep
-            fgItems: fgRep
-            textScale: pond.textScale
-            cond: pond.cond
-            t: pond.t
-            mouseX: pond.mouseX
-            mouseY: pond.mouseY
+            sourceComponent: Component {
+                Cyber {
+                    fishItems: fishRep
+                    fgItems: fgRep
+                    textScale: pond.textScale
+                    cond: pond.cond
+                    t: pond.t
+                    mouseX: pond.mouseX
+                    mouseY: pond.mouseY
+                }
+            }
         }
 
-        Hud {
-            id: hudLayer
+        Loader {
+            id: hudLoader
+            active: pond.hud
             anchors.fill: parent
             anchors.bottomMargin: pond.bottomInset
-            visible: pond.hud
-            title: pond.title
-            player: pond.player
-            textScale: pond.textScale
-            paused: !pond.active
-            lowPower: pond.lowPower
-            lockScreen: pond.lockScreen
-            t: pond.t
-            mouseX: pond.mouseX
-            mouseY: pond.mouseY
+            sourceComponent: Component {
+                Hud {
+                    title: pond.title
+                    player: pond.player
+                    textScale: pond.textScale
+                    paused: !pond.active
+                    lowPower: pond.lowPower
+                    lockScreen: pond.lockScreen
+                    t: pond.t
+                    mouseX: pond.mouseX
+                    mouseY: pond.mouseY
+                }
+            }
         }
 
         // two or three big out-of-focus fish close to the glass, each a different colour,

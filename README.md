@@ -36,6 +36,9 @@ cd submerge-2.0
 Without `--apply` it only installs; pick **Submerge** under System Settings > Colours & Themes >
 Global Theme. `./uninstall.sh` removes it. Needs Plasma 6.
 
+`./install.sh --apply` saves your prior settings in `~/.local/share/submerge-backup` without
+changing your panels. `./uninstall.sh` restores that backup before removing the theme files.
+
 ## From source
 
 ```sh
@@ -68,6 +71,14 @@ the pond. It installs system-wide, so it needs sudo:
 
 ```sh
 cd submerge-2.0/sddm
+sudo ./install.sh            # undo with: sudo ./install.sh --remove
+```
+
+For Plasma Login Manager (Plasma 6.8), use the `plasmalogin` folder. The HUD stays off on the
+login screen; if you save a wallpaper in System Settings > Login Screen, Plasma replaces the pond.
+
+```sh
+cd submerge-2.0/plasmalogin
 sudo ./install.sh            # undo with: sudo ./install.sh --remove
 ```
 

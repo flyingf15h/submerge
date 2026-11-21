@@ -92,7 +92,7 @@ Item {
     // ---- live system sensors ----
     // (the lock screen layout only shows CPU, memory, network and battery, so it skips the rest)
     Sensors.Sensor { id: cpu; sensorId: "cpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
-    Sensors.Sensor { id: gpu; enabled: !hud.lockScreen; sensorId: "gpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
+    Sensors.Sensor { id: gpu; enabled: !hud.lockScreen && hud.igpuChecked && hud.igpu < 0; sensorId: "gpu/all/usage"; updateRateLimit: Math.max(1500, hud.slow) }
     Sensors.Sensor { id: mem; sensorId: "memory/physical/usedPercent"; updateRateLimit: Math.max(2000, hud.slow) }
     Sensors.Sensor { id: down; sensorId: "network/all/download"; updateRateLimit: Math.max(1500, hud.slow) }
     Sensors.Sensor { id: up; enabled: !hud.lockScreen; sensorId: "network/all/upload"; updateRateLimit: Math.max(1500, hud.slow) }
@@ -105,8 +105,9 @@ Item {
     // account name for the USER line when none is set
     property string account: ""
     readonly property string accountCmd: "n=$(getent passwd \"$USER\" | cut -d: -f5 | cut -d, -f1); echo \"${n:-$USER}\""
-    // integrated GPU load when there's no discrete GPU (the gpu sensor reads 0 on Intel iGPUs)
+    // Intel iGPU load; the gpu sensor below only runs when there is none, since it wakes a sleeping dGPU
     property real igpu: -1
+    property bool igpuChecked: false
     readonly property string igpuCmd: script("igpu.sh")
     readonly property real gpuLoad: igpu >= 0 ? igpu : pct(gpu.value)
     function script(name) { return "sh '" + Qt.resolvedUrl("../code/" + name).toString().replace(/^file:\/\//, "") + "'"; }
@@ -149,6 +150,7 @@ Item {
         onNewData: (source, data) => {
             const v = parseFloat((data.stdout || "").trim());
             hud.igpu = isNaN(v) ? -1 : Math.max(0, Math.min(100, v));
+            hud.igpuChecked = true;
         }
     }
 
